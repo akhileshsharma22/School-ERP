@@ -1,0 +1,20 @@
+{
+  "name": "school-erp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-grade MERN School ERP with React, Vite, Express, and MongoDB.",
+  "license": "MIT",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "start": "npm --prefix backend run start",
+    "seed:admin": "npm --prefix backend run seed:admin",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend"
+  },
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10.0.0"
+  }
+}
