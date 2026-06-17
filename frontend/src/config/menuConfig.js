@@ -1,4 +1,5 @@
 import {
+  Database,
   LayoutDashboard,
   UserPlus,
   Users,
@@ -7,13 +8,6 @@ import {
   IndianRupee,
   BookOpen,
   ClipboardList,
-  Bus,
-  Library,
-  FileBarChart,
-  Settings,
-  MessageSquare,
-  Building2,
-  Wallet,
 } from "lucide-react";
 
 export const menuItems = [
@@ -21,6 +15,45 @@ export const menuItems = [
     title: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
+  },
+
+  {
+    title: "Master Setup",
+    icon: Database,
+    children: [
+      {
+        title: "Academic Years",
+        path: "/master-setup/academic-years",
+      },
+      {
+        title: "Classes & Sections",
+        path: "/master-setup/classes-sections",
+      },
+      {
+        title: "Streams",
+        path: "/master-setup/streams",
+      },
+      {
+        title: "Subjects",
+        path: "/master-setup/subjects",
+      },
+      {
+        title: "Departments",
+        path: "/master-setup/departments",
+      },
+      {
+        title: "Designations",
+        path: "/master-setup/designations",
+      },
+      {
+        title: "Categories",
+        path: "/master-setup/categories",
+      },
+      {
+        title: "Exam Types",
+        path: "/master-setup/exam-types",
+      },
+    ],
   },
 
   {
@@ -36,8 +69,16 @@ export const menuItems = [
         path: "/admissions/new",
       },
       {
-        title: "Visitors",
-        path: "/admissions/visitors",
+        title: "Admission List",
+        path: "/admissions/list",
+      },
+      {
+        title: "Document Verification",
+        path: "/admissions/verification",
+      },
+      {
+        title: "Admission Reports",
+        path: "/admissions/reports",
       },
     ],
   },
@@ -54,10 +95,6 @@ export const menuItems = [
         title: "Promotion",
         path: "/students/promotion",
       },
-      {
-        title: "Student ID Cards",
-        path: "/students/id-cards",
-      },
     ],
   },
 
@@ -70,12 +107,12 @@ export const menuItems = [
         path: "/staff",
       },
       {
-        title: "Departments",
-        path: "/staff/departments",
-      },
-      {
         title: "Leave Management",
         path: "/staff/leave",
+      },
+      {
+        title: "Payroll",
+        path: "/staff/payroll",
       },
     ],
   },
@@ -85,12 +122,24 @@ export const menuItems = [
     icon: CalendarDays,
     children: [
       {
+        title: "Daily Attendance",
+        path: "/attendance/dashboard",
+      },
+      {
         title: "Student Attendance",
         path: "/attendance/students",
       },
       {
         title: "Staff Attendance",
         path: "/attendance/staff",
+      },
+      {
+        title: "Attendance Reports",
+        path: "/attendance/reports",
+      },
+      {
+        title: "Attendance Analytics",
+        path: "/attendance/analytics",
       },
     ],
   },
@@ -117,7 +166,36 @@ export const menuItems = [
   {
     title: "Examinations",
     icon: ClipboardList,
-    path: "/examinations",
+    children: [
+      {
+        title: "Exam Setup",
+        path: "/exams/setup",
+      },
+      {
+        title: "Exam Schedule",
+        path: "/examinations/schedule",
+      },
+      {
+        title: "Marks Entry",
+        path: "/examinations/marks",
+      },
+      {
+        title: "Results",
+        path: "/examinations/results",
+      },
+      {
+        title: "Report Cards",
+        path: "/examinations/report-cards",
+      },
+      {
+        title: "Exam Analytics",
+        path: "/examinations/analytics",
+      },
+      {
+        title: "Grade Config",
+        path: "/examinations/grade-config",
+      },
+    ],
   },
 
   {
@@ -137,47 +215,5 @@ export const menuItems = [
         path: "/fees/reports",
       },
     ],
-  },
-
-  {
-    title: "Accounts",
-    icon: Wallet,
-    path: "/accounts",
-  },
-
-  {
-    title: "Transport",
-    icon: Bus,
-    path: "/transport",
-  },
-
-  {
-    title: "Library",
-    icon: Library,
-    path: "/library",
-  },
-
-  {
-    title: "Communication",
-    icon: MessageSquare,
-    path: "/communication",
-  },
-
-  {
-    title: "Reports",
-    icon: FileBarChart,
-    path: "/reports",
-  },
-
-  {
-    title: "School Settings",
-    icon: Building2,
-    path: "/school-settings",
-  },
-
-  {
-    title: "Settings",
-    icon: Settings,
-    path: "/settings",
   },
 ];

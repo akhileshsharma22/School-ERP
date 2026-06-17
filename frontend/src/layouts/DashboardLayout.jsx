@@ -41,7 +41,7 @@ const DashboardLayout = ({ children }) => {
 
       <div
         className={`min-h-screen transition-[margin] duration-300 ease-out ${
-          collapsed ? "lg:ml-20" : "lg:ml-[280px]"
+          collapsed ? "lg:ml-16" : "lg:ml-64"
         }`}
       >
 

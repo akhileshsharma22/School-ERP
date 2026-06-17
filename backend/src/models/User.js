@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema(
         "STAFF",
         "ACCOUNTANT",
         "PARENT",
+        "STUDENT",
       ],
       required: true,
     },

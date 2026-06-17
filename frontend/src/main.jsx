@@ -1,9 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+
 import { Provider } from "react-redux";
 
+import { Toaster } from "sonner";
+
 import "./index.css";
+
 import App from "./App";
+
 import { store } from "./redux/store";
 
 ReactDOM.createRoot(
@@ -11,7 +16,14 @@ ReactDOM.createRoot(
 ).render(
   <React.StrictMode>
     <Provider store={store}>
+
+      <Toaster
+        richColors
+        position="top-right"
+      />
+
       <App />
+
     </Provider>
   </React.StrictMode>
 );
