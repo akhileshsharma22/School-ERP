@@ -2,9 +2,11 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate,
 } from "react-router-dom";
 
 import LoginPage from "../pages/auth/LoginPage";
+import ProfileSettingsPage from "../pages/auth/ProfileSettingsPage";
 
 import DashboardHome from "../pages/dashboard/DashboardHome";
 
@@ -61,9 +63,24 @@ const AppRoutes = () => {
 
       <Routes>
 
+        {/* Login routes */}
         <Route
           path="/"
           element={<LoginPage />}
+        />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
+        {/* Profile Settings */}
+        <Route
+          path="/profile/settings"
+          element={
+            <ProtectedRoute>
+              <ProfileSettingsPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route

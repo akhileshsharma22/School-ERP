@@ -6,7 +6,7 @@ import Staff from "../models/Staff.js";
 import StudentAttendance from "../models/StudentAttendance.js";
 import StaffAttendance from "../models/StaffAttendance.js";
 import Exam from "../models/Exam.js";
-import ExamResult from "../models/ExamResult.js";
+import ExamResultSummary from "../models/ExamResultSummary.js";
 import StudentFeeAssignment from "../models/StudentFeeAssignment.js";
 import FeeReceipt from "../models/FeeReceipt.js";
 import AcademicYear from "../models/AcademicYear.js";
@@ -292,12 +292,12 @@ export const getDashboardSummary = async (req, res) => {
     }));
 
     // 10. Examination Analytics
-    const examResults = await ExamResult.find({ academicYear: ayObjectId });
+    const examResults = await ExamResultSummary.find({ academicYear: ayObjectId });
     const totalResults = examResults.length;
     const passedResults = examResults.filter(r => r.resultStatus === "PASS").length;
     const overallPassRate = safePercentage(passedResults, totalResults);
 
-    const classExamStats = await ExamResult.aggregate([
+    const classExamStats = await ExamResultSummary.aggregate([
       { $match: { academicYear: ayObjectId } },
       {
         $group: {

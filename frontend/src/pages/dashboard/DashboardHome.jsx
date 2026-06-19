@@ -10,15 +10,11 @@ import {
   ReceiptText,
   BookOpen,
   FileBarChart,
-  Search,
   AlertCircle,
   TrendingUp,
-  Award,
-  BookOpenCheck,
-  UserCheck,
+  Search,
   SearchCheck,
-  Loader2,
-  CalendarCheck
+  Loader2
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchDashboardSummary, searchDashboardData, clearSearchResults } from "../../redux/slices/dashboardSlice";
@@ -30,7 +26,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -72,6 +67,29 @@ const StatKpiCard = ({ title, value, icon: Icon, color, helper }) => (
   </div>
 );
 
+const KpiSkeleton = () => (
+  <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm space-y-3 animate-pulse">
+    <div className="flex justify-between items-start">
+      <div className="space-y-2 w-2/3">
+        <div className="h-3 bg-slate-250 rounded w-full"></div>
+        <div className="h-5.5 bg-slate-250 rounded w-1/2"></div>
+      </div>
+      <div className="h-8 w-8 bg-slate-200 rounded-lg shrink-0"></div>
+    </div>
+    <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+  </div>
+);
+
+const ChartSkeleton = () => (
+  <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm space-y-3.5 animate-pulse min-h-[220px] flex flex-col justify-between">
+    <div className="space-y-2">
+      <div className="h-4 bg-slate-250 rounded w-1/3"></div>
+      <div className="h-3 bg-slate-250 rounded w-1/2"></div>
+    </div>
+    <div className="h-28 bg-slate-100 rounded w-full"></div>
+  </div>
+);
+
 const SectionHeader = ({ title, subtitle }) => (
   <div className="mb-3">
     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">{title}</h3>
@@ -90,7 +108,7 @@ const DashboardHome = () => {
   const dispatch = useDispatch();
 
   // Redux Selectors
-  const { summary, searchResults, loading, searchLoading } = useSelector((s) => s.dashboard);
+  const { summary, searchResults, loading, searchLoading, error } = useSelector((s) => s.dashboard);
   const { academicYears } = useSelector((s) => s.academicYear);
   const { user } = useSelector((s) => s.auth);
 
@@ -99,25 +117,18 @@ const DashboardHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  // Fetch academic years on mount
+  // Fetch academic years & initial summary on page load
   useEffect(() => {
+    dispatch(fetchDashboardSummary());
     dispatch(fetchAcademicYears());
   }, [dispatch]);
 
-  // Set default current academic year
+  // Sync dropdown with active academic year loaded in summary
   useEffect(() => {
-    if (academicYears.length > 0 && !selectedAY) {
-      const current = academicYears.find(ay => ay.isCurrent) || academicYears[0];
-      setSelectedAY(current._id);
+    if (summary?.academicYear?.id && !selectedAY) {
+      setSelectedAY(summary.academicYear.id);
     }
-  }, [academicYears, selectedAY]);
-
-  // Fetch dashboard summary when academic year selection changes
-  useEffect(() => {
-    if (selectedAY) {
-      dispatch(fetchDashboardSummary(selectedAY));
-    }
-  }, [dispatch, selectedAY]);
+  }, [summary, selectedAY]);
 
   // Search input debouncer
   useEffect(() => {
@@ -134,6 +145,16 @@ const DashboardHome = () => {
     return () => clearTimeout(handler);
   }, [searchQuery, selectedAY, dispatch]);
 
+  const handleAYChange = (ayId) => {
+    setSelectedAY(ayId);
+    dispatch(fetchDashboardSummary(ayId));
+  };
+
+  const handleRetry = () => {
+    dispatch(fetchDashboardSummary(selectedAY || undefined));
+    dispatch(fetchAcademicYears());
+  };
+
   const currentDate = new Intl.DateTimeFormat("en-IN", {
     weekday: "long",
     day: "2-digit",
@@ -141,7 +162,6 @@ const DashboardHome = () => {
     year: "numeric",
   }).format(new Date());
 
-  // Pie chart formatting helper
   const pieData = useMemo(() => {
     if (!summary?.studentOverview?.categoryDistribution) return [];
     return summary.studentOverview.categoryDistribution.filter(c => c.count > 0);
@@ -152,11 +172,17 @@ const DashboardHome = () => {
     return r.students?.length > 0 || r.staff?.length > 0 || r.admissions?.length > 0 || r.finance?.length > 0 || r.exams?.length > 0;
   }, [searchResults]);
 
+  // Determine if database contains absolutely no students, staff, and classes
+  const isDatabaseEmpty = useMemo(() => {
+    if (!summary) return false;
+    return summary.kpis.totalStudents === 0 && summary.kpis.totalStaff === 0 && summary.kpis.activeClasses === 0;
+  }, [summary]);
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1600px] space-y-5 pb-8">
         
-        {/* TOP COMMANDER CONTROLS & WELCOME BAR */}
+        {/* TOP WELCOME & ACADEMIC YEAR SELECT BAR */}
         <section className="grid gap-3.5 md:grid-cols-[1fr_280px] items-center">
           <div className="rounded-xl border border-slate-250 bg-white p-4.5 shadow-sm flex items-center justify-between">
             <div className="space-y-0.5">
@@ -176,12 +202,11 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          {/* Academic Session Selector Widget */}
           <div className="rounded-xl border border-slate-250 bg-white p-3.5 shadow-sm flex flex-col justify-center">
             <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Academic Year</label>
             <select
               value={selectedAY}
-              onChange={(e) => setSelectedAY(e.target.value)}
+              onChange={(e) => handleAYChange(e.target.value)}
               className="mt-1 h-9.5 w-full rounded-lg border border-slate-200 px-2.5 text-xs outline-none bg-white font-bold text-slate-800 focus:border-slate-450"
             >
               {academicYears.map((ay) => (
@@ -230,7 +255,6 @@ const DashboardHome = () => {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 text-xs font-semibold text-slate-700">
-                  {/* Students Column */}
                   {searchResults.students?.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-blue-600 border-b border-blue-50 pb-0.5">Students</h4>
@@ -243,7 +267,6 @@ const DashboardHome = () => {
                     </div>
                   )}
 
-                  {/* Admissions Column */}
                   {searchResults.admissions?.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 border-b border-emerald-50 pb-0.5">Admissions</h4>
@@ -256,7 +279,6 @@ const DashboardHome = () => {
                     </div>
                   )}
 
-                  {/* Staff Column */}
                   {searchResults.staff?.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-purple-600 border-b border-purple-50 pb-0.5">Staff</h4>
@@ -269,7 +291,6 @@ const DashboardHome = () => {
                     </div>
                   )}
 
-                  {/* Fees/Finance Column */}
                   {searchResults.finance?.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-rose-600 border-b border-rose-50 pb-0.5">Fees & Finance</h4>
@@ -282,7 +303,6 @@ const DashboardHome = () => {
                     </div>
                   )}
 
-                  {/* Exams Column */}
                   {searchResults.exams?.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="text-[10px] font-bold uppercase tracking-wider text-amber-600 border-b border-amber-50 pb-0.5">Examinations</h4>
@@ -300,17 +320,58 @@ const DashboardHome = () => {
           )}
         </section>
 
+        {/* LOADING STATE - SKELETON LOADERS */}
         {loading && !summary ? (
-          <div className="flex items-center justify-center py-20 text-slate-500 font-semibold gap-2">
-            <Loader2 className="animate-spin text-blue-600" size={20} /> Fetching Command Center metrics...
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 lg:grid-cols-8">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <KpiSkeleton key={i} />
+              ))}
+            </div>
+            <div className="grid gap-4.5 md:grid-cols-2">
+              <ChartSkeleton />
+              <ChartSkeleton />
+            </div>
+            <div className="grid gap-4.5 md:grid-cols-2">
+              <ChartSkeleton />
+              <ChartSkeleton />
+            </div>
+          </div>
+        ) : error ? (
+          /* ERROR STATE */
+          <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-800 space-y-3 shadow-sm">
+            <AlertCircle className="mx-auto text-red-500" size={32} />
+            <h3 className="text-base font-bold">Failed to Fetch Dashboard Summaries</h3>
+            <p className="text-xs text-red-600 max-w-md mx-auto font-medium">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="inline-flex h-9.5 items-center justify-center rounded-xl bg-red-950 px-5 text-xs font-bold text-white hover:bg-red-900 cursor-pointer shadow-sm transition"
+            >
+              Retry Connection
+            </button>
+          </div>
+        ) : isDatabaseEmpty ? (
+          /* DATABASE EMPTY STATE */
+          <div className="rounded-xl border border-dashed border-slate-250 bg-white p-12 text-center text-slate-500 shadow-sm max-w-md mx-auto my-10 space-y-3.5">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400">
+              <AlertCircle size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">No ERP Data Available</h3>
+              <p className="mt-1 text-xs text-slate-400 max-w-sm mx-auto font-medium">
+                The database is currently empty. Set up Academic Years, admitting student profiles, classes, sections, and fee assignments to populate the command center.
+              </p>
+            </div>
           </div>
         ) : !summary ? (
+          /* FALLBACK STUCK PANEL */
           <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500">
             No statistics configured or loaded. Please select an active Academic Year.
           </div>
         ) : (
+          /* SUCCESS STATE */
           <>
-            {/* TOP KPI SECTION */}
+            {/* KPI STATS SECTION */}
             <section className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 lg:grid-cols-8">
               <StatKpiCard
                 title="Total Students"
@@ -372,7 +433,6 @@ const DashboardHome = () => {
 
             {/* FIRST ROW: ACADEMIC & ADMISSION OVERVIEW */}
             <section className="grid gap-4.5 md:grid-cols-2">
-              {/* Academic Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Academic Overview" subtitle="Total master setup parameters and class capacities" />
@@ -411,7 +471,6 @@ const DashboardHome = () => {
                 </div>
               </div>
 
-              {/* Admission Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Admissions & Enquiries" subtitle="Funnel conversions and conversion rates" />
@@ -454,12 +513,9 @@ const DashboardHome = () => {
 
             {/* SECOND ROW: STUDENT & STAFF OVERVIEW */}
             <section className="grid gap-4.5 md:grid-cols-2">
-              {/* Student Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Student Demographics" subtitle="Active gender breakdown and social category statistics" />
-                  
-                  {/* Gender Split Bar */}
                   <div className="space-y-1 mb-4.5">
                     <div className="flex justify-between text-xs font-bold text-slate-700">
                       <span className="text-blue-600">Boys: {summary.studentOverview.boys}</span>
@@ -473,7 +529,6 @@ const DashboardHome = () => {
                 </div>
 
                 <div className="grid grid-cols-[160px_1fr] gap-3 items-center min-h-[140px]">
-                  {/* Category Pie Chart */}
                   <div className="w-full h-36">
                     {pieData.length === 0 ? (
                       <EmptyStateWidget message="No categories populated" />
@@ -499,7 +554,6 @@ const DashboardHome = () => {
                     )}
                   </div>
 
-                  {/* Category Counts Listing */}
                   <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
                     {summary.studentOverview.categoryDistribution.map((cat, idx) => (
                       <div key={cat.category} className="flex items-center gap-1.5 p-1 hover:bg-slate-50 rounded-lg">
@@ -511,11 +565,9 @@ const DashboardHome = () => {
                 </div>
               </div>
 
-              {/* Staff Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Staff & Administration" subtitle="Human resources, department numbers, and attendance rate today" />
-                  
                   <div className="grid grid-cols-3 gap-2.5 mb-4 text-center">
                     <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150">
                       <span className="block text-lg font-bold text-slate-800">{summary.staffOverview.totalStaff}</span>
@@ -533,7 +585,6 @@ const DashboardHome = () => {
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3.5 text-xs font-semibold text-slate-700">
-                  {/* Department Staff Numbers */}
                   <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 border-b pb-0.5">Department distribution</h4>
                     {summary.staffOverview.departmentDistribution.length === 0 ? (
@@ -548,7 +599,6 @@ const DashboardHome = () => {
                     )}
                   </div>
 
-                  {/* Staff Attendance Summary Today */}
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-150 flex flex-col justify-center text-center">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Staff Present Today</span>
                     <span className="text-2xl font-extrabold text-purple-700 mt-1 block">{summary.staffOverview.staffAttendanceRateToday}%</span>
@@ -560,12 +610,9 @@ const DashboardHome = () => {
 
             {/* THIRD ROW: ATTENDANCE & EXAMINATION OVERVIEW */}
             <section className="grid gap-4.5 md:grid-cols-[1.2fr_0.8fr]">
-              {/* Attendance Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Daily Student Attendance Trends" subtitle="30-day tracking history and class attendance summaries" />
-                  
-                  {/* Today attendance summary */}
                   <div className="grid grid-cols-3 gap-2.5 mb-3.5 text-center text-xs font-bold">
                     <div className="bg-blue-50/50 p-1.5 rounded-lg border border-blue-100">
                       <span className="block text-slate-800 font-extrabold text-sm">{summary.attendanceOverview.presentStudents}</span>
@@ -583,7 +630,6 @@ const DashboardHome = () => {
                 </div>
 
                 <div className="grid sm:grid-cols-[1.5fr_1fr] gap-4 items-center">
-                  {/* Attendance Recharts graph */}
                   <div className="h-44 w-full">
                     {summary.attendanceOverview.studentAttendanceTrend.length === 0 ? (
                       <EmptyStateWidget message="No attendance data populated over the last 30 days." />
@@ -606,7 +652,6 @@ const DashboardHome = () => {
                     )}
                   </div>
 
-                  {/* Attendance rate by class */}
                   <div className="space-y-1.5 max-h-[176px] overflow-y-auto pr-1">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 border-b pb-0.5">Attendance by Class today</h4>
                     {summary.attendanceOverview.attendanceByClass.length === 0 ? (
@@ -623,11 +668,9 @@ const DashboardHome = () => {
                 </div>
               </div>
 
-              {/* Examination Overview */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Examination Performance" subtitle="Pass rates and overall exam statistics" />
-                  
                   <div className="grid grid-cols-2 gap-2 text-center text-xs mb-3">
                     <div className="bg-slate-50 p-2 rounded-lg border border-slate-150">
                       <span className="block text-slate-800 font-extrabold text-sm">{summary.examinationOverview.totalExams}</span>
@@ -641,7 +684,6 @@ const DashboardHome = () => {
                 </div>
 
                 <div className="space-y-2.5">
-                  {/* Overall Pass Percentage Indicator */}
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 flex items-center justify-between text-xs">
                     <div className="space-y-0.5 font-bold">
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Overall Pass Rate</span>
@@ -652,7 +694,6 @@ const DashboardHome = () => {
                     </div>
                   </div>
 
-                  {/* Top & lowest performing indicators */}
                   <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
                     <div className="p-2 bg-emerald-50 border border-emerald-100 rounded-lg">
                       <span className="text-[9px] uppercase tracking-wider text-emerald-700 font-bold block">Top Performing</span>
@@ -669,12 +710,9 @@ const DashboardHome = () => {
 
             {/* FOURTH ROW: FEES & FINANCE OVERVIEW */}
             <section className="grid gap-4.5 lg:grid-cols-[1.1fr_0.9fr]">
-              {/* Financial Collection Summary */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Fees & Finance Status" subtitle="Invoices collection, category waivers, and expectations" />
-                  
-                  {/* Expected, Paid, and Outstanding counts */}
                   <div className="grid grid-cols-3 gap-3 text-center mb-4 font-bold text-xs">
                     <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
                       <span className="block text-slate-900 text-sm font-extrabold">₹{summary.financeOverview.expectedCollection.toLocaleString("en-IN")}</span>
@@ -692,7 +730,6 @@ const DashboardHome = () => {
                 </div>
 
                 <div className="grid sm:grid-cols-[1.3fr_1fr] gap-4.5 items-center">
-                  {/* Recharts collection Bar Chart */}
                   <div className="h-44 w-full">
                     {summary.financeOverview.monthlyCollectionTrend.length === 0 ? (
                       <EmptyStateWidget message="No fee payment collections processed this year." />
@@ -725,7 +762,6 @@ const DashboardHome = () => {
                 </div>
               </div>
 
-              {/* Recent Transactions Payments History */}
               <div className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm flex flex-col justify-between">
                 <div>
                   <SectionHeader title="Recent Payment Receipts" subtitle="5 latest transaction records verified in the database" />

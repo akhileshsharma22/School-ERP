@@ -10,6 +10,9 @@ import "./index.css";
 import App from "./App";
 
 import { store } from "./redux/store";
+import { injectStore } from "./services/api";
+
+injectStore(store);
 
 ReactDOM.createRoot(
   document.getElementById("root")
