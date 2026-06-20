@@ -23,7 +23,6 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchAttendanceAnalytics } from "../../redux/slices/attendanceSlice";
 

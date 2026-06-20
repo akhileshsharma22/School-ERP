@@ -460,38 +460,32 @@ export const getAssignments = async (req, res) => {
 export const bulkTriggerAssignments = async (req, res) => {
   try {
     const { academicYearId, className } = req.body;
-    console.log("Triggering bulk fee assignments for academicYear:", academicYearId, "class:", className);
 
     // 1. Verify Active Academic Year exists
     if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
-      console.error("Bulk Assignment Error: Invalid or missing Academic Year ID.");
       return res.status(400).json({ success: false, message: "A valid Academic Year is required." });
     }
 
     const activeAY = await AcademicYear.findById(academicYearId);
     if (!activeAY) {
-      console.error("Bulk Assignment Error: Active Academic Year session not found in database.");
       return res.status(400).json({ success: false, message: "No active Academic Year session found." });
     }
 
     // 2. Verify Categories exist
     const categoriesCount = await FeeCategory.countDocuments();
     if (categoriesCount === 0) {
-      console.error("Bulk Assignment Error: No Fee Categories configured in database.");
       return res.status(400).json({ success: false, message: "No Fee Categories exist in the system database. Please configure categories first." });
     }
 
     // 3. Verify Fee Structures exist
     const structuresCount = await FeeStructure.countDocuments({ academicYear: academicYearId, status: "Active" });
     if (structuresCount === 0) {
-      console.error("Bulk Assignment Error: No active Fee Structures found for AY:", academicYearId);
       return res.status(400).json({ success: false, message: "No active Fee Structures configured for the selected Academic Year." });
     }
 
     // 4. Verify Approved Admissions exist
     const approvedAdmissionsCount = await Admission.countDocuments({ approvalStatus: "Approved" });
     if (approvedAdmissionsCount === 0) {
-      console.error("Bulk Assignment Warning: No Approved Admissions found in system.");
       return res.status(400).json({ success: false, message: "No Approved Admissions found in the system database." });
     }
 
@@ -501,7 +495,6 @@ export const bulkTriggerAssignments = async (req, res) => {
 
     const students = await Student.find(studentQuery);
     if (students.length === 0) {
-      console.error("Bulk Assignment Error: No active students found matching class filter:", className);
       return res.status(400).json({ success: false, message: `No active students found for Class ${className || "all"}` });
     }
 
@@ -516,7 +509,6 @@ export const bulkTriggerAssignments = async (req, res) => {
       if (!student.className || !student.category || !student.academicYear) {
         skippedMissingDataCount++;
         missingDataInfo.push(`${student.firstName} ${student.lastName} (Missing class/category/academicYear)`);
-        console.warn(`Skipping student ${student.firstName} ${student.lastName} due to missing fields class/category/academicYear`);
         continue;
       }
 
@@ -540,25 +532,20 @@ export const bulkTriggerAssignments = async (req, res) => {
         if (assigned) {
           assignedCount++;
         } else {
-          console.warn(`No fee structure configured for student ${student.firstName} ${student.lastName} (Class ${student.className})`);
           missingStructureClasses.add(student.className);
         }
       } catch (e) {
-        console.error(`Error in assignFeesToStudent service call for student ${student.firstName} ${student.lastName}:`, e);
-        console.error(e.stack);
         missingStructureClasses.add(student.className);
       }
     }
 
     // Check outputs
     if (alreadyAssignedCount === students.length) {
-      console.log("Bulk Trigger: Assignments already generated for all active students.");
       return res.status(400).json({ success: false, message: "Assignments already generated" });
     }
 
     if (assignedCount === 0 && missingStructureClasses.size > 0) {
       const classesList = Array.from(missingStructureClasses).join(", ");
-      console.error(`Bulk Trigger Error: No assignments generated. Missing structures for Class(es): ${classesList}`);
       return res.status(400).json({ success: false, message: `No fee structure configured for Class ${classesList}` });
     }
 
@@ -581,8 +568,6 @@ export const bulkTriggerAssignments = async (req, res) => {
       missingDataInfo
     });
   } catch (error) {
-    console.error("Generate Assignment Error:", error);
-    console.error(error.stack);
     return res.status(500).json({ success: false, message: error.message, stack: error.stack });
   }
 };

@@ -45,7 +45,6 @@ export const assignFeesToStudent = async (studentId, academicYearId, className, 
 
     if (!structure) {
       // Return null or throw custom error if structure not found
-      console.log(`No active Fee Structure found for academicYear=${academicYearId}, class=${className}, stream=${streamName}, section=${sectionName}. Falling back.`);
       return null;
     }
 

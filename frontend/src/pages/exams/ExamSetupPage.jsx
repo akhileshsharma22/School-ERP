@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Plus, Search, Download, Loader2, Info, ClipboardList,
-  Calendar, CheckCircle, XCircle, Clock, Edit3, Trash2,
-  Eye, ChevronDown, AlertTriangle, BookOpen, Users,
+  Plus, Search, Loader2, ClipboardList,
+  Calendar, CheckCircle, Clock, Edit3, Trash2,
+  AlertTriangle, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -55,7 +55,7 @@ const EMPTY_FORM = {
 
 const ExamSetupPage = () => {
   const dispatch = useDispatch();
-  const { exams, examsTotal, examsLoading, examsSaving, setupReady, setupMissing, setupLoading } =
+  const { exams, examsLoading, examsSaving, setupMissing, setupLoading } =
     useSelector((s) => s.exams);
   const { academicYears } = useSelector((s) => s.academicYear);
   const { examTypes } = useSelector((s) => s.examTypes);
@@ -68,7 +68,7 @@ const ExamSetupPage = () => {
   const [filterET, setFilterET] = useState("");
   const [modal, setModal] = useState({ open: false, mode: "create", data: null });
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [statusTarget, setStatusTarget] = useState(null);
+
   const [form, setForm] = useState(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState({});
 
@@ -240,7 +240,6 @@ const ExamSetupPage = () => {
     const res = await dispatch(updateExamStatus({ id: exam._id, status }));
     if (updateExamStatus.fulfilled.match(res)) {
       toast.success(`Status updated to ${status}`);
-      setStatusTarget(null);
     } else {
       toast.error(res.payload || "Failed to update status");
     }

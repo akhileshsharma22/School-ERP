@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Loader2, Calendar, Check, Save, Search, Users, CheckCircle, XCircle, Clock, Award } from "lucide-react";
+import { Loader2, Save, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchStaffList, fetchAttendanceForDate, saveBulkAttendance } from "../../redux/slices/staffSlice";

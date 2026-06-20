@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  FileText, Download, Printer, Eye, Users, Loader2, RefreshCw,
-  QrCode, Building2, GraduationCap,
+  FileText, Printer, Eye, Loader2, RefreshCw,
+  QrCode, GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";

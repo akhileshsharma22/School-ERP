@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   Download,
-  Info,
   Loader2,
   Plus,
   Search,
@@ -13,7 +12,6 @@ import {
   FileCheck,
   Printer,
   Coins,
-  Calendar,
   AlertCircle,
   ShieldCheck,
   FileText,
@@ -58,18 +56,18 @@ const AdmissionListPage = () => {
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   });
 
-  useEffect(() => {
-    dispatch(fetchAllClasses());
-    loadAdmissions();
-  }, [dispatch, classFilter, verifyFilter, approveFilter]);
-
-  const loadAdmissions = () => {
+  function loadAdmissions() {
     const params = {};
     if (classFilter) params.className = classFilter;
     if (verifyFilter) params.verificationStatus = verifyFilter;
     if (approveFilter) params.approvalStatus = approveFilter;
     dispatch(fetchAdmissions(params));
-  };
+  }
+
+  useEffect(() => {
+    dispatch(fetchAllClasses());
+    loadAdmissions();
+  }, [dispatch, classFilter, verifyFilter, approveFilter]);
 
   const filteredAdmissions = useMemo(() => {
     return admissions.filter((adm) => {

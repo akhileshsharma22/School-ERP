@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Search, RefreshCw, Loader2, Save, FileDown, Upload, Calculator,
+  Search, RefreshCw, Loader2, Save, FileDown,
   CheckCircle, XCircle, AlertTriangle, Users, BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,13 +61,6 @@ const MarksEntryPage = () => {
 
   // Local marks state (student_id → marks)
   const [marksMap, setMarksMap] = useState({});
-
-  // Debug logs
-  console.log("Selected Class Name:", className);
-  console.log("Selected Section Name:", section);
-  console.log("Exam Types List:", examTypes);
-  console.log("All Subjects List:", subjects);
-  console.log("Schedules List:", schedule);
 
   useEffect(() => {
     dispatch(checkExamSetup());
@@ -140,7 +133,7 @@ const MarksEntryPage = () => {
     if (!section) return toast.error("Please select a section.");
     if (!subjectId) return toast.error("Please select a subject.");
 
-    const [studRes] = await Promise.all([
+    await Promise.all([
       dispatch(fetchStudentsForMarks({ className, section, academicYear })),
       dispatch(fetchMarks({ exam: examId, className, section, subject: subjectId })),
     ]);
@@ -206,9 +199,6 @@ const MarksEntryPage = () => {
     toast.success("All students marked absent");
   };
 
-  const autoCalculate = () => {
-    toast.success("Grades calculated automatically from marks");
-  };
 
   const validateAndGetPayload = (isDraft = false) => {
     const marksData = [];

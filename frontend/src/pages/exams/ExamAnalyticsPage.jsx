@@ -2,13 +2,11 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Users, CheckCircle, XCircle, TrendingUp, BarChart2, Award, Trophy,
-  ArrowDown, ArrowUp, Minus, Loader2, RefreshCw, AlertTriangle, BookOpen,
-  Calendar, Layers, Filter, LayoutGrid
+  ArrowDown, Loader2, RefreshCw, Filter
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line
 } from "recharts";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -20,7 +18,7 @@ import { fetchAllClasses } from "../../redux/slices/classSectionSlice";
 import { fetchAllExamTypes } from "../../redux/slices/examTypeSlice";
 import { fetchAllSubjects } from "../../redux/slices/subjectSlice";
 
-const COLORS = ["#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"];
+
 const GRADE_COLORS_MAP = {
   A1: "#10b981", A2: "#22c55e", B1: "#3b82f6", B2: "#60a5fa",
   C1: "#f59e0b", C2: "#fbbf24", D: "#f97316", F: "#ef4444",

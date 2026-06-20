@@ -1,14 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Loader2, Coins, Calendar, FileText, Printer, CheckCircle, Clock, Plus, Search, Eye, Download } from "lucide-react";
+import { Loader2, Coins, Printer, CheckCircle, Clock, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchStaffList, fetchPayrollAcrossSchool, createPayroll } from "../../redux/slices/staffSlice";
 
 const StaffPayrollPage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
 
   const { staffList, allPayroll, loading, saving } = useSelector((state) => state.staff);
 

@@ -1,19 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Calendar,
   Search,
-  Filter,
   FileSpreadsheet,
   Printer,
   Loader2,
   Users,
   Briefcase,
-  AlertCircle,
-  FileText,
   Clock,
-  CheckCircle,
-  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -26,7 +20,6 @@ import { fetchAttendanceReports } from "../../redux/slices/attendanceSlice";
 const AttendanceReportsPage = () => {
   const dispatch = useDispatch();
 
-  const { academicYears } = useSelector((state) => state.academicYear);
   const { classes } = useSelector((state) => state.classSections);
   const { departments } = useSelector((state) => state.departments);
   const { designations } = useSelector((state) => state.designations);
@@ -115,7 +108,7 @@ const AttendanceReportsPage = () => {
       return;
     }
 
-    let csvContent = "";
+    let csvContent;
     if (reportType === "student") {
       const headers = [
         "Student Name",

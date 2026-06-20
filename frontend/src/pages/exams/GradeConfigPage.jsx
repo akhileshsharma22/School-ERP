@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Plus, Trash2, Save, Loader2, Info, Settings } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchGradeConfig, saveGradeConfig } from "../../redux/slices/examSlice";
@@ -54,7 +54,7 @@ const GradeConfigPage = () => {
 
   const handleAYChange = async (ayId) => {
     setAcademicYear(ayId);
-    const res = await dispatch(fetchGradeConfig(ayId ? { academicYear: ayId } : {}));
+    await dispatch(fetchGradeConfig(ayId ? { academicYear: ayId } : {}));
   };
 
   const updateGrade = (index, field, value) => {

@@ -73,8 +73,6 @@ const ExamSchedulePage = () => {
   const { staffList } = useSelector((s) => s.staff);
   const { examTypes } = useSelector((s) => s.examTypes);
 
-  console.log("Exam Types State:", examTypes);
-
   const [filterExam, setFilterExam] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [filterSection, setFilterSection] = useState("");
@@ -402,8 +400,6 @@ const ExamSchedulePage = () => {
       status: form.status,
       instructions: form.instructions,
     };
-
-    console.log("Exam Schedule Payload", payload);
 
     if (modal.mode === "create") {
       const res = await dispatch(createScheduleEntry(payload));
@@ -841,7 +837,6 @@ const ExamSchedulePage = () => {
                   <label className="mb-1.5 block text-xs font-semibold text-slate-700">Exam Type *</label>
                   <select value={form.examType} onChange={(e) => {
                     const selectedType = examTypes.find((t) => t._id === e.target.value);
-                    console.log("Selected Exam Type:", selectedType);
                     setForm((f) => ({ ...f, examType: e.target.value, examTypeName: selectedType?.examName || "" }));
                   }}
                     disabled={modal.mode === "edit" || !form.exam || examTypes.length === 0}

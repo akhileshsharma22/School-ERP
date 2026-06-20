@@ -54,7 +54,6 @@ export const getSchedules = async (req, res) => {
 
 export const createScheduleEntry = async (req, res) => {
   try {
-    console.log("examScheduleController createScheduleEntry req.body:", req.body);
     const { academicYear, exam, examType, examTypeName, classId, className, section, subject, subjectName,
             examDate, startTime, endTime, room, invigilator, maxMarks, passingMarks, status, instructions } = req.body;
 

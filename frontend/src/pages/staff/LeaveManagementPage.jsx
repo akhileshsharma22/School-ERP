@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Loader2, Clock, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchLeavesAcrossSchool, processLeaveStatus } from "../../redux/slices/staffSlice";
@@ -9,7 +9,7 @@ const LeaveManagementPage = () => {
   const dispatch = useDispatch();
   
   const { allLeaves, loading, saving } = useSelector((state) => state.staff);
-  const { user } = useSelector((state) => state.auth);
+
 
   const [statusFilter, setStatusFilter] = useState("Pending");
   const [remarks, setRemarks] = useState("");

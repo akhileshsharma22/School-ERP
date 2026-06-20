@@ -11,7 +11,6 @@ export const fetchAllExamTypes = createAsyncThunk(
     try {
       const data =
         await examTypeService.getExamTypes();
-      console.log("Exam Types API:", data);
       return data.examTypes;
     } catch (error) {
       return rejectWithValue(

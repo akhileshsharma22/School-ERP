@@ -15,7 +15,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { Loader2, TrendingUp, Users, CheckCircle, FileText, ArrowRight } from "lucide-react";
+import { Loader2, TrendingUp, Users, CheckCircle, FileText } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchAdmissions } from "../../redux/slices/admissionSlice";
 import { fetchEnquiries } from "../../redux/slices/enquirySlice";

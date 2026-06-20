@@ -9,9 +9,7 @@ import {
   ArrowLeft,
   Briefcase,
   User,
-  Mail,
-  MapPin,
-  HelpCircle
+  Mail
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";

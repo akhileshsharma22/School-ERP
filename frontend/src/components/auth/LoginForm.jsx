@@ -49,28 +49,17 @@ const LoginForm = () => {
         setLoading(true);
 
         try {
-            console.log("Sending Data:", {
-                identifier: formData.identifier,
-                password: formData.password,
-                role,
-            });
-
             const response = await loginUser({
                 identifier: formData.identifier,
                 password: formData.password,
                 role,
             });
 
-            console.log("API Response:", response);
-
             dispatch(loginSuccess(response));
 
             navigate("/dashboard");
 
         } catch (err) {
-            console.log("Login Error:", err);
-            console.log("Response:", err?.response);
-
             setError(
                 err?.response?.data?.message ||
                 err?.message ||

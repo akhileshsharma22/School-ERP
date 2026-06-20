@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+
 import {
   FileText,
   Loader2,
@@ -20,7 +20,7 @@ import { verifyApplication } from "../../redux/slices/documentVerificationSlice"
 
 const DocumentVerificationPage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
 
   const { admissions, loading } = useSelector((state) => state.admissions);
   const { verifying } = useSelector((state) => state.documentVerification);

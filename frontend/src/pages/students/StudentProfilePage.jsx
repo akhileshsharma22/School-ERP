@@ -10,21 +10,15 @@ import {
   History,
   Activity,
   Printer,
-  Edit,
-  Send,
-  Eye,
   ArrowLeft,
   Loader2,
-  CheckCircle,
-  XCircle,
   AlertCircle,
   Upload,
-  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { fetchStudentProfile, updateStudentProfile } from "../../redux/slices/studentProfileSlice";
-import * as studentService from "../../services/studentService";
+
 
 const TAB_ITEMS = [
   { id: "overview", label: "Overview", icon: User },
@@ -49,7 +43,6 @@ const StudentProfilePage = () => {
     examResults,
     attendanceSummary,
     loading,
-    saving,
     error,
   } = useSelector((state) => state.studentProfile);
 

@@ -2,13 +2,12 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   TrendingUp, BarChart2, DollarSign, AlertCircle, Percent, Download, Search,
-  FileText, RefreshCw, UserCheck, History, Calendar, Filter, ArrowUpRight,
-  CreditCard, ShieldAlert, CheckCircle, XCircle, Users, Receipt
+  RefreshCw, UserCheck, History, ArrowUpRight,
+  ShieldAlert, Users, Receipt
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -60,11 +59,9 @@ const FeeReportsPage = () => {
 
   // Redux Selectors
   const { metrics, charts, auditLogs, receipts, invoices, assignments, loading, saving } = useSelector((s) => s.finance);
-  const { academicYears } = useSelector((s) => s.academicYear);
   const { classes } = useSelector((s) => s.classSections);
 
   // Filters State
-  const [filterAY, setFilterAY] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLedgerStudent, setSelectedLedgerStudent] = useState(null);
@@ -260,8 +257,7 @@ const FeeReportsPage = () => {
     };
   }, [selectedLedgerStudent, invoices, receipts, assignments]);
 
-  // Overall check if we have dashboard metrics
-  const hasDashboardData = metrics && (metrics.totalCollection > 0 || metrics.outstandingDues > 0);
+
 
   return (
     <DashboardLayout>

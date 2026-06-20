@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Calendar, Clock, MapPin, User, BookOpen } from "lucide-react";
+import { Calendar, Clock, MapPin, User } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 
 // Standard mock data for timetables across classes

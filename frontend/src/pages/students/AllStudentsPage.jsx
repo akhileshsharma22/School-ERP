@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
-  Download,
   Search,
   Eye,
   Edit3,
@@ -17,9 +16,7 @@ import {
   Info,
   Users,
   CheckCircle,
-  XCircle,
   FileSpreadsheet,
-  FileCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -48,7 +45,7 @@ const AllStudentsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { students, metrics, loading, saving } = useSelector((state) => state.students);
+  const { students, metrics, loading } = useSelector((state) => state.students);
   const { academicYears } = useSelector((state) => state.academicYear);
   const { classes } = useSelector((state) => state.classSections);
   const { streams } = useSelector((state) => state.streams);
@@ -95,15 +92,7 @@ const AllStudentsPage = () => {
     aadhaarNumber: "",
   });
 
-  useEffect(() => {
-    dispatch(fetchAcademicYears());
-    dispatch(fetchAllClasses());
-    dispatch(fetchStreams());
-    dispatch(fetchAllCategories());
-    loadStudents();
-  }, [dispatch]);
-
-  const loadStudents = () => {
+  function loadStudents() {
     const params = { status };
     if (academicYearId) params.academicYearId = academicYearId;
     if (className) params.className = className;
@@ -115,7 +104,15 @@ const AllStudentsPage = () => {
 
     dispatch(fetchStudents(params));
     setSelectedIds([]); // Reset selection
-  };
+  }
+
+  useEffect(() => {
+    dispatch(fetchAcademicYears());
+    dispatch(fetchAllClasses());
+    dispatch(fetchStreams());
+    dispatch(fetchAllCategories());
+    loadStudents();
+  }, [dispatch]);
 
   const handleResetFilters = () => {
     setSearch("");

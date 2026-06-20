@@ -1,9 +1,24 @@
 {
-  "name": "school-erp",
-  "version": "0.1.0",
+  "name": "springfield-erp",
+  "version": "1.0.0",
   "private": true,
-  "description": "Production-grade MERN School ERP with React, Vite, Express, and MongoDB.",
+  "description": "Springfield ERP - A production-grade School ERP System built using the MERN Stack.",
+  "author": "Akhilesh Sharma <akhileshsharmaldh2004@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akhileshsharma22/School-ERP.git"
+  },
+  "keywords": [
+    "school-erp",
+    "mern-stack",
+    "react",
+    "express",
+    "mongodb",
+    "redux-toolkit",
+    "education-management"
+  ],
+  "homepage": "https://github.com/akhileshsharma22/School-ERP#readme",
   "scripts": {
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",

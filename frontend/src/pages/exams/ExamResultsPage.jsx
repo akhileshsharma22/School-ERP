@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Trophy, Users, CheckCircle, XCircle, TrendingUp, Search, Loader2,
-  Eye, Printer, Send, Download, RefreshCw, BarChart2, AlertTriangle,
+  Eye, Send, Download, RefreshCw, BarChart2,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -48,7 +48,7 @@ const StatCard = ({ label, value, sub, colorClass, icon: Icon }) => (
 
 const ExamResultsPage = () => {
   const dispatch = useDispatch();
-  const { exams, results, resultsTotal, resultsLoading, resultsSaving, resultsSummary, marksStudents } =
+  const { exams, results, resultsLoading, resultsSaving, resultsSummary, marksStudents } =
     useSelector((s) => s.exams);
   const { academicYears } = useSelector((s) => s.academicYear);
   const { classes } = useSelector((s) => s.classSections);
@@ -61,12 +61,6 @@ const ExamResultsPage = () => {
   const [viewModal, setViewModal] = useState(null);
   const [computing, setComputing] = useState(false);
   const [loaded, setLoaded] = useState(false);
-
-  // Add temporary logs
-  console.log("selectedClass", filterClass);
-  console.log("selectedSection", filterSection);
-  console.log("students", marksStudents);
-  console.log("results", results);
 
   useEffect(() => {
     dispatch(fetchAcademicYears());

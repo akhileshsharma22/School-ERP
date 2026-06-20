@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Plus, Edit2, Trash2, ShieldAlert, Sparkles, HelpCircle } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import {
@@ -21,7 +21,7 @@ const FeeStructurePage = () => {
   const [activeTab, setActiveTab] = useState("heads");
 
   // Selectors
-  const { categories, discounts, structures, loading, saving } = useSelector((s) => s.finance);
+  const { categories, discounts, structures, saving } = useSelector((s) => s.finance);
   const { academicYears } = useSelector((s) => s.academicYear);
   const { classes } = useSelector((s) => s.classSections);
 

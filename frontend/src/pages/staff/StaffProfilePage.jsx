@@ -4,21 +4,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   User,
   Calendar,
-  Briefcase,
   Coins,
   FileText,
   Activity,
   Printer,
   ArrowLeft,
   Loader2,
-  CheckCircle,
-  XCircle,
   AlertCircle,
   Upload,
   Clock,
-  Plus,
   Trash2,
-  FileSpreadsheet,
   Download
 } from "lucide-react";
 import { toast } from "sonner";

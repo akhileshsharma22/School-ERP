@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Download,
   Edit3,
-  Info,
   Loader2,
   Plus,
   Search,
@@ -13,9 +12,7 @@ import {
   Phone,
   Mail,
   UserPlus,
-  Filter,
   CheckCircle,
-  XCircle,
   UserCheck,
   AlertTriangle,
 } from "lucide-react";
@@ -47,7 +44,7 @@ const EnquiriesPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { enquiries, loading, saving, error } = useSelector((state) => state.enquiries);
+  const { enquiries, loading, saving } = useSelector((state) => state.enquiries);
   const { classes } = useSelector((state) => state.classSections);
   const { streams } = useSelector((state) => state.streams);
   const { currentAcademicYear } = useSelector((state) => state.academicYear);

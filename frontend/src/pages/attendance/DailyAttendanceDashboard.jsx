@@ -25,7 +25,7 @@ const DailyAttendanceDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { setupStatus, dashboard, loading, error } = useSelector(
+  const { setupStatus, dashboard, loading } = useSelector(
     (state) => state.attendance
   );
 
