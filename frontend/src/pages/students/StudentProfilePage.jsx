@@ -49,6 +49,14 @@ const StudentProfilePage = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && TAB_ITEMS.some(item => item.id === tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
+
+  useEffect(() => {
     dispatch(fetchStudentProfile(id));
   }, [dispatch, id]);
 

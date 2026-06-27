@@ -1,5 +1,6 @@
 import express from "express";
 import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 import {
   getFeeCategories, createFeeCategory, updateFeeCategory, deleteFeeCategory,
   getDiscounts, createDiscount, updateDiscount, deleteDiscount,
@@ -15,40 +16,40 @@ const router = express.Router();
 router.use(protect);
 
 // Fee Categories
-router.get("/fee-categories", getFeeCategories);
-router.post("/fee-categories", createFeeCategory);
-router.put("/fee-categories/:id", updateFeeCategory);
-router.delete("/fee-categories/:id", deleteFeeCategory);
+router.get("/fee-categories", authorize("ADMIN"), getFeeCategories);
+router.post("/fee-categories", authorize("ADMIN"), createFeeCategory);
+router.put("/fee-categories/:id", authorize("ADMIN"), updateFeeCategory);
+router.delete("/fee-categories/:id", authorize("ADMIN"), deleteFeeCategory);
 
 // Discounts
-router.get("/discounts", getDiscounts);
-router.post("/discounts", createDiscount);
-router.put("/discounts/:id", updateDiscount);
-router.delete("/discounts/:id", deleteDiscount);
+router.get("/discounts", authorize("ADMIN"), getDiscounts);
+router.post("/discounts", authorize("ADMIN"), createDiscount);
+router.put("/discounts/:id", authorize("ADMIN"), updateDiscount);
+router.delete("/discounts/:id", authorize("ADMIN"), deleteDiscount);
 
 // Structures
-router.get("/structures", getStructures);
-router.post("/structures", createStructure);
-router.put("/structures/:id", updateStructure);
-router.delete("/structures/:id", deleteStructure);
+router.get("/structures", authorize("ADMIN"), getStructures);
+router.post("/structures", authorize("ADMIN"), createStructure);
+router.put("/structures/:id", authorize("ADMIN"), updateStructure);
+router.delete("/structures/:id", authorize("ADMIN"), deleteStructure);
 
 // Student Assignments
-router.get("/assignments", getAssignments);
-router.post("/assignments/trigger", triggerStudentAssignment);
-router.post("/assignments/bulk-trigger", bulkTriggerAssignments);
+router.get("/assignments", authorize("ADMIN"), getAssignments);
+router.post("/assignments/trigger", authorize("ADMIN"), triggerStudentAssignment);
+router.post("/assignments/bulk-trigger", authorize("ADMIN"), bulkTriggerAssignments);
 
 // Invoices
 router.get("/invoices", getInvoices);
 router.get("/invoices/:id", getInvoiceById);
-router.post("/invoices/:id/concession", applyConcession);
-router.post("/invoices/:id/collect", collectPayment);
+router.post("/invoices/:id/concession", authorize("ADMIN"), applyConcession);
+router.post("/invoices/:id/collect", authorize("ADMIN"), collectPayment);
 
 // Receipts & Refunds
 router.get("/receipts", getReceipts);
-router.post("/receipts/:id/refund", refundReceipt);
+router.post("/receipts/:id/refund", authorize("ADMIN"), refundReceipt);
 
 // Dashboard & Metrics & Audits
-router.get("/dashboard", getDashboardMetrics);
-router.get("/audit-logs", getFinanceAuditLogs);
+router.get("/dashboard", authorize("ADMIN"), getDashboardMetrics);
+router.get("/audit-logs", authorize("ADMIN"), getFinanceAuditLogs);
 
 export default router;

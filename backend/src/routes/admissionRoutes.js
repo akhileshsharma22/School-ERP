@@ -49,11 +49,14 @@ const upload = multer({
 
 const router = express.Router();
 
+router.use(protect);
+router.use(authorize("ADMIN"));
+
 // Admissions routes
-router.get("/setup-check", protect, checkSetupDependencies);
-router.get("/", protect, getAdmissions);
-router.post("/", protect, createAdmission);
-router.post("/upload", protect, (req, res, next) => {
+router.get("/setup-check", checkSetupDependencies);
+router.get("/", getAdmissions);
+router.post("/", createAdmission);
+router.post("/upload", (req, res, next) => {
   upload.single("file")(req, res, (err) => {
     if (err) {
       let errorMessage = err.message;
@@ -72,7 +75,7 @@ router.post("/upload", protect, (req, res, next) => {
     next();
   });
 }, uploadDocument);
-router.put("/:id/verify", protect, verifyAdmission);
-router.post("/:id/approve", protect, authorize("SUPER_ADMIN", "ADMIN"), approveAdmission);
+router.put("/:id/verify", verifyAdmission);
+router.post("/:id/approve", approveAdmission);
 
 export default router;

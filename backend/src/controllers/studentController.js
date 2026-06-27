@@ -34,26 +34,26 @@ export const getStudents = async (req, res) => {
         { motherEmail: req.user.email },
         { fatherMobile: req.user.mobile },
       ];
-    } else if (req.user.role === "STAFF") {
-      // Teachers (Staff) can only view students in sections where they are assigned as Class Teacher
-      const assignedClasses = await ClassSection.find({
-        "sections.classTeacher": req.user.fullName,
-      });
-
-      if (assignedClasses.length > 0) {
-        const classFilters = [];
-        assignedClasses.forEach((c) => {
-          c.sections.forEach((s) => {
-            if (s.classTeacher === req.user.fullName) {
-              classFilters.push({ className: c.className, sectionName: s.sectionName });
-            }
-          });
+    } else if (req.user.role === "TEACHER") {
+      // Teachers can only view students in assigned classes
+      const assigned = req.user.assignedClasses;
+      if (assigned && assigned.length > 0) {
+        const classFilters = assigned.map((ac) => ({
+          className: ac.className,
+          sectionName: ac.sectionName
+        }));
+        const uniqueFilters = [];
+        const seen = new Set();
+        classFilters.forEach((f) => {
+          const key = `${f.className}-${f.sectionName}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueFilters.push(f);
+          }
         });
-        if (classFilters.length > 0) {
-          query.$or = classFilters;
-        } else {
-          return res.status(200).json({ success: true, data: [], metrics: {} });
-        }
+        query.$or = uniqueFilters;
+      } else {
+        return res.status(200).json({ success: true, data: [], metrics: {} });
       }
     }
 
@@ -177,6 +177,19 @@ export const getStudentProfile = async (req, res) => {
         success: false,
         message: "Access Denied. You can only view your own child's profile.",
       });
+    }
+
+    // Security check for Teacher role
+    if (req.user.role === "TEACHER") {
+      const isAssigned = req.user.assignedClasses?.some(
+        (ac) => ac.className === student.className && ac.sectionName === student.sectionName
+      );
+      if (!isAssigned) {
+        return res.status(403).json({
+          success: false,
+          message: "Access Denied. You can only view profiles of students in your assigned classes.",
+        });
+      }
     }
 
     // Enquiries data

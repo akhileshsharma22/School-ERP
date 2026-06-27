@@ -41,6 +41,8 @@ api.interceptors.response.use(
         sessionStorage.clear();
       }
       toast.error("Session expired. Please login again.");
+    } else if (error.response && error.response.status === 403) {
+      window.location.href = "/unauthorized";
     }
     return Promise.reject(error);
   }

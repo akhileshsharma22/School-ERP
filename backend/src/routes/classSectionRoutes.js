@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createClassSection,
@@ -9,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.get("/", getClassSections);
+router.get("/", protect, getClassSections);
 
-router.post("/", createClassSection);
+router.post("/", protect, authorize("ADMIN"), createClassSection);
 
-router.put("/:id", updateClassSection);
+router.put("/:id", protect, authorize("ADMIN"), updateClassSection);
 
-router.delete("/:id", deleteClassSection);
+router.delete("/:id", protect, authorize("ADMIN"), deleteClassSection);
 
 export default router;

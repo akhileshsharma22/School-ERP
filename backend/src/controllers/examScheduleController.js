@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import ExamSchedule from "../models/ExamSchedule.js";
 import Exam from "../models/Exam.js";
 import ExamAuditLog from "../models/ExamAuditLog.js";
+import Student from "../models/Student.js";
 
 const getClientIp = (req) =>
   req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "";
@@ -40,6 +41,28 @@ export const getSchedules = async (req, res) => {
     if (classId && mongoose.Types.ObjectId.isValid(classId))
       filter.classId = new mongoose.Types.ObjectId(classId);
     if (section) filter.section = section;
+
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).select("className sectionName");
+      
+      if (parentStudents.length > 0) {
+        filter.$or = parentStudents.map(s => ({ className: s.className, section: s.sectionName }));
+      } else {
+        return res.json({ success: true, schedules: [] });
+      }
+    } else if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length > 0) {
+        filter.$or = assigned.map(ac => ({ className: ac.className, section: ac.sectionName }));
+      } else {
+        return res.json({ success: true, schedules: [] });
+      }
+    }
 
     const schedules = await ExamSchedule.find(filter)
       .populate("subject", "subjectName subjectCode subjectType")

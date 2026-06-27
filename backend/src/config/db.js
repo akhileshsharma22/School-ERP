@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { migrateLegacyExamClasses } from "../utils/migration.js";
 
 const connectDB = async () => {
   try {
@@ -9,6 +10,9 @@ const connectDB = async () => {
     console.log(
       `MongoDB Connected: ${conn.connection.host}`
     );
+
+    // Asynchronously run legacy data migration
+    migrateLegacyExamClasses();
   } catch (error) {
     console.error(error);
     process.exit(1);

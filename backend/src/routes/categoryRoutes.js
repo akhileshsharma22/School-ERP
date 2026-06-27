@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createCategory,
@@ -9,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.get("/", getCategories);
+router.get("/", protect, getCategories);
 
-router.post("/", createCategory);
+router.post("/", protect, authorize("ADMIN"), createCategory);
 
-router.put("/:id", updateCategory);
+router.put("/:id", protect, authorize("ADMIN"), updateCategory);
 
-router.delete("/:id", deleteCategory);
+router.delete("/:id", protect, authorize("ADMIN"), deleteCategory);
 
 export default router;

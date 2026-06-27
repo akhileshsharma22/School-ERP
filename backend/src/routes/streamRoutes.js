@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createStream,
@@ -9,9 +11,9 @@ import {
 
 const router = express.Router();
 
-router.get("/", getStreams);
-router.post("/", createStream);
-router.put("/:id", updateStream);
-router.delete("/:id", deleteStream);
+router.get("/", protect, getStreams);
+router.post("/", protect, authorize("ADMIN"), createStream);
+router.put("/:id", protect, authorize("ADMIN"), updateStream);
+router.delete("/:id", protect, authorize("ADMIN"), deleteStream);
 
 export default router;

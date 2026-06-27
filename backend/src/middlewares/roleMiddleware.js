@@ -6,6 +6,10 @@ export const authorize = (...roles) => {
       });
     }
 
+    if (req.user.role === "ADMIN") {
+      return next();
+    }
+
     if (!roles.includes(req.user.role)) {
       if (req.originalUrl.includes("/approve")) {
         return res.status(403).json({

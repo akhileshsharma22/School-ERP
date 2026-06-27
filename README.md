@@ -1,255 +1,184 @@
 # Springfield ERP
 
-A production-grade School ERP System built using the MERN Stack. Springfield ERP provides a comprehensive educational management suite to administer academic workflows, student admissions, attendance tracking, examination scheduling, grading analysis, and financial collections in a single secure, role-based platform.
+A production-grade, enterprise-ready School ERP System built using the MERN stack.
 
 ---
 
-## Table of Contents
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Installation Guide](#installation-guide)
-- [Screenshots](#screenshots)
-- [API Documentation](#api-documentation)
-- [Contribution Guidelines](#contribution-guidelines)
-- [License](#license)
+## 1. Project Overview
+
+Springfield ERP is a comprehensive academic administration platform designed to manage and automate educational operations. The system consolidates user authentication, academic setups, admissions, student records, staff payroll directories, student/staff attendance, exam schedules, grading compute modules, and financial collections under a single secure, role-based application.
 
 ---
 
-## Key Features
+## 2. Key Features & Modules
 
-### Master Setup
-- **Academic Years**: Establish and archive active/inactive academic sessions.
-- **Classes & Sections**: Map standard classrooms and map section-specific classroom limits.
-- **Streams**: Segregate senior secondary education pathways (e.g., Science, Commerce, Arts).
-- **Subjects**: Configure core and elective subjects mapped to specific classes.
-- **Departments & Designations**: Maintain corporate staffing layers.
-- **Categories**: Map student pricing tiers (General, OBC, SC, ST) for automated invoicing.
-- **Exam Types**: Set up recurring terms, assessment weightages, and grading standards.
+### ⚙️ Master Setup
+- **Academic Years**: Manage sessions with archive flags and automatic current term routing.
+- **Classes & Sections**: Map standard grades and section enrollment limits.
+- **Streams**: Segregate senior secondary education pathways (Science, Commerce, Arts).
+- **Subjects**: Configure core and elective classes mapped to specific grades.
+- **Departments & Designations**: Structure administrative and teaching personnel roles.
+- **Categories**: Map demographics (General, OBC, SC, ST) for concession invoicing.
+- **Exam Types & Grading Configs**: Configure weightages, terms, and grading thresholds.
 
-### Admissions
-- **Enquiries**: Capture, status-track, and convert candidate admission enquiries.
-- **New Admissions**: End-to-end multi-step registration forms for demographic, parent, and document details.
-- **Visitor Management**: Log details of campus guests, guardians, and third-party vendors.
+### 📝 Admissions
+- **Enquiries**: Capture, convert, and status-track candidate queries.
+- **New Admissions**: Process student registrations containing parent and demographic files.
+- **Visitor Logs**: Track campus guests, guardians, and third-party vendors.
 
-### Students
-- **Student Profiles**: Interactive student records detailing personal dossiers, parents, fees, and marks.
-- **Promotion Management**: Batch upgrade students across academic years with academic filters.
-- **Documents & Records**: Secure storage of KYC documents (Aadhaar, transfer certificates, birth logs).
+### 🎓 Students & Staff
+- **Student Dossier**: Complete dossier with profiles, fee statuses, and exam schedules.
+- **Promotions**: Bulk promote classes with condition filters across academic terms.
+- **Staff Profiles**: Maintain files with joining details, department assignments, and salaries.
 
-### Staff
-- **Staff Management**: Comprehensive directory of teaching and non-teaching personnel.
-- **Dossiers**: Detailed logs of salary structures, leave allowances, and qualifications.
+### 📅 Attendance
+- **Daily Roll-Calls**: Mark student and staff attendance status (Present, Absent, Late, Half Day).
+- **Analytics**: Render class attendance averages and exportable registers.
 
-### Attendance
-- **Student Attendance**: Daily roll-calls per section with quick toggles (Present, Absent, Late).
-- **Staff Attendance**: Biometric-ready attendance registers for institutional tracking.
-- **Reports**: Section-wise average attendance charts and exportable history.
+### ✍️ Examinations & Grading
+- **Timetabling**: Automated conflict-free scheduling checks (room & invigilator).
+- **Marks Entry**: Draft-saveable subject grids for teachers with auto-computed passing percentages.
+- **Result Top-Lists**: Compute term rankings and pass percentages.
 
-### Examinations
-- **Exam Setup**: Configure term-wide assessments.
-- **Exam Scheduling**: Conflict-free exam timetabling with automated room and invigilator checks.
-- **Marks Entry**: Draft-saveable subject grids for teachers with automatic percentage calculations.
-- **Results & Analytics**: Instantly compute term topper rankings, pass rates, and performance trends.
-
-### Fees & Finance
-- **Fee Structures**: Define class and term-based fee configurations (Tuition, Library, Sports).
-- **Category Discounts**: Automatic student category discounts (Waivers, percentage, or fixed concessions).
-- **Fee Assignment**: Automatic bulk assignment of fee schedules on admission approval.
-- **Fee Collection & Receipts**: Process payments with instant print-friendly receipts and invoices.
+### 💳 Fees & Finance
+- **Fee Structures**: Define class and term-based fee packages (Tuition, Library, Sports).
+- **Discounts**: Apply concessions automatically based on student categories on enrollment.
+- **Collections & Receipts**: Process payments and produce print-friendly invoices.
 
 ---
 
-## Tech Stack
+## 3. Tech Stack
 
-### Frontend
-- **React**: Interactive component-driven user interface.
-- **Redux Toolkit**: Centralized global state orchestration.
-- **React Router**: Declarative client-side routing.
-- **Axios**: Promised-based HTTP client for API communication.
-- **Tailwind CSS**: Modern utility-first styling.
-
-### Backend
-- **Node.js**: Asynchronous event-driven JavaScript runtime.
-- **Express.js**: Minimalist web routing framework.
-- **MongoDB**: Schema-flexible Document database.
-- **Mongoose**: Elegant MongoDB object modeling for Node.js.
-- **JWT Authentication**: Secure stateless token-based authorization.
+- **Frontend**: React, Redux Toolkit, React Router, Tailwind CSS, Axios, Lucide Icons, Sonner.
+- **Backend**: Node.js, Express.js, MongoDB, Mongoose, JWT Authentication, bcryptjs.
+- **Development Tools**: Vite, Nodemon, Playwright.
 
 ---
 
-## Project Structure
+## 4. Folder Structure & Architecture
 
-This project uses a clean monorepo organization separating backend API services from the frontend single-page application.
+Refer to [SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) and [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) for deeper layout references.
 
 ```text
 springfield-erp/
-├── backend/                    # Express API Server & Database Layer
+├── backend/                    # Express API Server
 │   ├── src/
-│   │   ├── config/             # Database and security helper setups
-│   │   ├── controllers/        # HTTP controllers (receives req, triggers service, returns res)
-│   │   ├── middlewares/        # Authentication, RBAC, and error validation filters
-│   │   ├── models/             # Mongoose Schemas (Data mapping layer)
-│   │   ├── routes/             # API Endpoints mapping to Controllers
-│   │   ├── seed/               # Initial database seeder scripts
-│   │   ├── services/           # Domain business rules and transactions
-│   │   └── utils/              # Reusable helper functions
-│   ├── uploads/                # Temporary local document storage
-│   ├── package.json            # Backend dependency manifest
-│   └── server.js               # Express server entry point
+│   │   ├── config/             # DB setups
+│   │   ├── controllers/        # HTTP controllers
+│   │   ├── middlewares/        # JWT / Role guards
+│   │   ├── models/             # Mongoose schemas
+│   │   ├── routes/             # REST route files
+│   │   └── utils/              # Migration and helper utilities
+│   └── server.js               # Entry point
 │
-├── frontend/                   # React Single Page Client Application
-│   ├── public/                 # Static images and favicons
+├── frontend/                   # React SPA Client
 │   ├── src/
-│   │   ├── assets/             # Bundled application images and design assets
-│   │   ├── components/         # Reusable presentation and layout UI elements
-│   │   ├── config/             # Sidebar menus and system configs
-│   │   ├── constants/          # Application-wide immutable constant vectors
-│   │   ├── layouts/            # Page shells (Dashboard layouts)
-│   │   ├── pages/              # View screens mounted on routes
-│   │   ├── redux/              # RTK Store and feature state slices
-│   │   ├── routes/             # AppRoutes and Protected route guards
-│   │   ├── schemas/            # Zod validation schemas
-│   │   └── services/           # Axios HTTP API services
-│   ├── package.json            # Frontend dependency manifest
-│   └── vite.config.js          # Vite build pack configuration
+│   │   ├── components/         # Reusable components
+│   │   ├── pages/              # Screen components
+│   │   ├── redux/              # Redux RTK store
+│   │   └── services/           # API services
+│   └── vite.config.js          # Build pack config
+│
+└── docs/                       # System Documentation
 ```
 
 ---
 
-## Installation Guide
+## 5. Session Routing & Role Access Boundaries
 
-Follow these steps to run a production-ready development replica on your local machine:
+Authentication is implemented via stateless signed JWT payloads. Access controls are enforced both on frontend routers and backend middleware gates.
 
-### 1. Clone the Repository
+### Roles Matrix
+- **ADMIN**: Complete view. Access to Master Setup, Admissions, Promotions, Staff Directories, Finance Collections, and Global KPIs.
+- **TEACHER**: Scoped view. Can view Today's Classes, list assigned students in their `assignedClasses`, mark section attendance, and submit marks.
+- **PARENT**: Dedicated child portal. Selects linked child to view overall attendance rates, fee invoices status, exam results, and schedule calendars.
+
+---
+
+## 6. Installation & Run Guide
+
+### Prerequisites
+- Node.js >= 20.19.0
+- MongoDB Local Server or MongoDB Atlas Account
+
+### 1. Clone the Project
 ```bash
 git clone https://github.com/akhileshsharma22/School-ERP.git
 cd School-ERP
 ```
 
-### 2. Install Project Dependencies
-Run the installation script at the root directory to automatically build node modules for both folders:
+### 2. Install Dependencies
+Run the utility installer from the root workspace folder to build all packages:
 ```bash
 npm run install:all
 ```
 
-Alternatively, run installation commands inside their respective folders:
-```bash
-# Inside frontend folder
-cd frontend && npm install
-
-# Inside backend folder
-cd ../backend && npm install
-```
-
-### 3. Setup Environment Variables
+### 3. Environment Variables Config
 Create `.env` files in both the frontend and backend folders using the provided `.env.example` templates:
 
-```bash
-# Setup backend environment file
-cp backend/.env.example backend/.env
+- **Backend Configuration (`backend/.env`)**:
+  ```ini
+  PORT=5000
+  MONGO_URI=mongodb://127.0.0.1:27017/springfield-erp
+  JWT_SECRET=supersecret123
+  JWT_REFRESH_SECRET=refreshsecret456
+  CLIENT_URL=http://localhost:5173
+  NODE_ENV=development
+  ```
+- **Frontend Configuration (`frontend/.env`)**:
+  ```ini
+  VITE_API_BASE_URL=http://127.0.0.1:5000/api
+  VITE_API_URL=http://127.0.0.1:5000
+  VITE_APP_NAME=Springfield ERP
+  ```
 
-# Setup frontend environment file
-cp frontend/.env.example frontend/.env
+### 4. Seed Database
+Seeding resets database state and generates base classes, categories, departments, and three role accounts:
+```bash
+# Inside root folder
+npm run seed:admin
 ```
 
-Define dummy configuration keys inside `.env` ensuring secrets are kept secure:
-- **Backend (`backend/.env`)**:
-  - `PORT=5000`
-  - `MONGO_URI=your_mongodb_connection_string`
-  - `JWT_SECRET=your_jwt_signing_key`
-  - `JWT_REFRESH_SECRET=your_jwt_refresh_key`
-  - `CLIENT_URL=http://localhost:5173`
-- **Frontend (`frontend/.env`)**:
-  - `VITE_API_BASE_URL=http://localhost:5000/api`
-  - `VITE_API_URL=http://localhost:5000`
-
-### 4. Start the Application
-You can run the full-stack setup with these root commands:
-
+### 5. Running in Development Mode
+Start both services concurrently using the root package scripts:
 ```bash
-# Run backend API server (runs at http://localhost:5000)
+# Terminal 1: Backend Server (starts on http://localhost:5000)
 npm run dev:backend
 
-# Run frontend client app (runs at http://localhost:5173)
+# Terminal 2: Frontend App (starts on http://localhost:5173)
 npm run dev:frontend
 ```
 
 ---
 
-## Screenshots
+## 7. Default Credentials (Seeded Profiles)
 
-> [!NOTE]
-> Below are visualization placeholders for key modules. Replace files under the `docs/screenshots/` directory to display active dashboard images.
-
-### Dashboard
-![Dashboard Placeholder](docs/screenshots/dashboard.jpg)
-
-### Master Setup
-![Master Setup Placeholder](docs/screenshots/master_setup.jpg)
-
-### Admissions
-![Admissions Placeholder](docs/screenshots/admissions.jpg)
-
-### Students
-![Students Placeholder](docs/screenshots/students.jpg)
-
-### Staff
-![Staff Placeholder](docs/screenshots/staff.jpg)
-
-### Attendance
-![Attendance Placeholder](docs/screenshots/attendance.jpg)
-
-### Examinations
-![Examinations Placeholder](docs/screenshots/examinations.jpg)
-
-### Fees & Finance
-![Fees & Finance Placeholder](docs/screenshots/fees_finance.jpg)
+| Role | Username / Email | Password | Linked Target |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@erp.com` | `Admin@123` | Global Administration |
+| **Teacher** | `teacher@erp.com` | `Teacher@123` | Class 10-A, Subject: Mathematics |
+| **Parent** | `parent@erp.com` | `Parent@123` | Guardian of "Test Student" |
 
 ---
 
-## API Documentation
+## 8. System Diagrams & Documentation
 
-### Authentication Endpoints
-- `POST /api/auth/login` - Validates credentials and returns JWT session tokens.
-- `POST /api/auth/refresh-token` - Renews authorization tokens securely.
-- `GET /api/auth/profile` - Fetches authenticated user profile credentials.
-
-### Student Management Endpoints
-- `GET /api/students` - Queries student database with class, category, and status filters.
-- `GET /api/students/profile/:id` - Detailed student dossier review.
-- `PUT /api/students/profile/:id` - Updates specific student demographics.
-- `DELETE /api/students/:id` - Performs dependent delete validation and drops student profile.
-
-### Admission Workflows
-- `GET /api/admissions/applications` - Lists all processed or pending applications.
-- `POST /api/admissions/applications` - Submits a new candidate application profile.
-- `PUT /api/admissions/applications/:id/verify` - Verifies student files.
-- `POST /api/admissions/applications/:id/approve` - Generates student credentials and triggers automatic fee mapping.
-
-### Attendance Registries
-- `GET /api/attendance` - Fetches historical attendance files.
-- `POST /api/attendance/mark` - Saves attendance logs (Present, Absent, Late).
-
-### Examinations & Grading
-- `GET /api/exams` - Lists active exam schedules.
-- `POST /api/exams/schedule` - Creates new timetables with room conflict verification checks.
-- `POST /api/exams/marks/bulk` - Saves subject grades in bulk.
-- `POST /api/exams/results/compute` - Aggregates marks and assigns ranks.
-
-### Financial Transactions
-- `GET /api/finance/fee-structures` - Lists configured tuition fee heads.
-- `POST /api/finance/payments/collect/:id` - Records payment transactions and creates billing invoices.
-- `GET /api/finance/receipts` - Queries print-friendly receipts.
+Deep-dive logs detailing subsystems are located in the `docs` folder:
+- [System Architecture](docs/SYSTEM_ARCHITECTURE.md)
+- [Database Model Schema](docs/DATABASE_SCHEMA.md)
+- [Functional Module Flows](docs/MODULE_FLOW.md)
+- [API Route Reference](docs/API_REFERENCE.md)
 
 ---
 
-## Contribution Guidelines
-
-Contributions are welcome to make Springfield ERP a leading open-source system! Please review [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming conventions, commit layouts, and local developer validation checklists before initiating pull requests.
+## 9. Future Enhancements
+- **LMS Integration**: Assignment submission and quiz portals.
+- **Messaging System**: Live communication channel between Parents and Class Teachers.
+- **Bus Tracking GPS**: Real-time school vehicle tracking for Parents.
 
 ---
 
-## License
+## 10. License & Author
 
-This project is licensed under the terms of the MIT License. See [LICENSE](LICENSE) for full details.
+- **License**: MIT License - See [LICENSE](LICENSE) for details.
+- **Author**: [Akhilesh Sharma](https://github.com/akhileshsharma22)

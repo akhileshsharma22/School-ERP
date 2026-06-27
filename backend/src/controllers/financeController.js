@@ -613,7 +613,20 @@ export const getInvoices = async (req, res) => {
     const { student, status, className, academicYear, search } = req.query;
     const filter = {};
 
-    if (student && mongoose.Types.ObjectId.isValid(student)) filter.student = student;
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).distinct("_id");
+      filter.student = { $in: parentStudents };
+    } else if (req.user.role === "TEACHER") {
+      return res.status(403).json({ success: false, message: "Access Denied. Teachers cannot view invoices." });
+    } else {
+      if (student && mongoose.Types.ObjectId.isValid(student)) filter.student = student;
+    }
+
     if (status) filter.status = status;
     if (className) filter.className = className;
     if (academicYear && mongoose.Types.ObjectId.isValid(academicYear)) filter.academicYear = academicYear;
@@ -837,7 +850,20 @@ export const getReceipts = async (req, res) => {
   try {
     const { student } = req.query;
     const filter = {};
-    if (student && mongoose.Types.ObjectId.isValid(student)) filter.student = student;
+
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).distinct("_id");
+      filter.student = { $in: parentStudents };
+    } else if (req.user.role === "TEACHER") {
+      return res.status(403).json({ success: false, message: "Access Denied. Teachers cannot view receipts." });
+    } else {
+      if (student && mongoose.Types.ObjectId.isValid(student)) filter.student = student;
+    }
 
     const receipts = await FeeReceipt.find(filter)
       .populate("student", "firstName lastName admissionNo className sectionName")

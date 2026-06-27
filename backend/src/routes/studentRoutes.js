@@ -10,6 +10,7 @@ import {
   deleteStudent,
 } from "../controllers/studentController.js";
 import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 // Ensure uploads folder exists
 const uploadDir = "./public/uploads";
@@ -48,8 +49,8 @@ const router = express.Router();
 
 router.get("/", protect, getStudents);
 router.get("/:id", protect, getStudentProfile);
-router.put("/:id", protect, upload.single("photo"), updateStudentProfile);
-router.post("/:id/transfer", protect, transferStudent);
-router.delete("/:id", protect, deleteStudent);
+router.put("/:id", protect, authorize("ADMIN"), upload.single("photo"), updateStudentProfile);
+router.post("/:id/transfer", protect, authorize("ADMIN"), transferStudent);
+router.delete("/:id", protect, authorize("ADMIN"), deleteStudent);
 
 export default router;

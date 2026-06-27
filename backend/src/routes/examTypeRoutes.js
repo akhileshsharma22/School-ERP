@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createExamType,
@@ -9,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.get("/", getExamTypes);
+router.get("/", protect, getExamTypes);
 
-router.post("/", createExamType);
+router.post("/", protect, authorize("ADMIN"), createExamType);
 
-router.put("/:id", updateExamType);
+router.put("/:id", protect, authorize("ADMIN"), updateExamType);
 
-router.delete("/:id", deleteExamType);
+router.delete("/:id", protect, authorize("ADMIN"), deleteExamType);
 
 export default router;

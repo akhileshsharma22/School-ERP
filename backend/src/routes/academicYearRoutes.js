@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createAcademicYear,
@@ -10,28 +12,36 @@ import {
 
 const router = express.Router();
 
-router.post(
-  "/",
-  createAcademicYear
-);
-
 router.get(
   "/",
+  protect,
   getAcademicYears
 );
 
 router.get(
   "/current",
+  protect,
   getCurrentAcademicYear
+);
+
+router.post(
+  "/",
+  protect,
+  authorize("ADMIN"),
+  createAcademicYear
 );
 
 router.put(
   "/:id/current",
+  protect,
+  authorize("ADMIN"),
   setCurrentAcademicYear
 );
 
 router.delete(
   "/:id",
+  protect,
+  authorize("ADMIN"),
   deleteAcademicYear
 );
 

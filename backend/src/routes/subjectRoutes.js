@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createSubject,
@@ -9,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.get("/", getSubjects);
+router.get("/", protect, getSubjects);
 
-router.post("/", createSubject);
+router.post("/", protect, authorize("ADMIN"), createSubject);
 
-router.put("/:id", updateSubject);
+router.put("/:id", protect, authorize("ADMIN"), updateSubject);
 
-router.delete("/:id", deleteSubject);
+router.delete("/:id", protect, authorize("ADMIN"), deleteSubject);
 
 export default router;

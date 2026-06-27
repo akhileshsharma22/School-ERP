@@ -15,6 +15,7 @@ import Stream from "../models/Stream.js";
 import Subject from "../models/Subject.js";
 import Department from "../models/Department.js";
 import Invoice from "../models/Invoice.js";
+import MarksEntry from "../models/MarksEntry.js";
 
 // Helper to calculate percentages safely
 const safePercentage = (numerator, denominator) => {
@@ -44,17 +45,230 @@ export const getDashboardSummary = async (req, res) => {
     const ayObjectId = new mongoose.Types.ObjectId(academicYear);
     const ayDoc = await AcademicYear.findById(ayObjectId);
 
-    // Resolve date bounds for current month and academic year
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const startOfToday = new Date(today);
-
     const ayStart = ayDoc ? new Date(ayDoc.startDate) : new Date(today.getFullYear(), 0, 1);
     const ayEnd = ayDoc ? new Date(ayDoc.endDate) : new Date(today.getFullYear(), 11, 31);
 
-    // 2. Fetch Base Counts (KPI Cards / Overviews)
+    // ==========================================
+    // TEACHER DASHBOARD LOGIC
+    // ==========================================
+    if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length === 0) {
+        return res.status(200).json({
+          success: true,
+          role: "TEACHER",
+          data: {
+            todaysClasses: [],
+            assignedStudentsCount: 0,
+            studentAttendanceRateToday: 0,
+            upcomingExams: [],
+            pendingMarksEntry: [],
+            kpis: {
+              totalClasses: 0,
+              totalSubjects: 0
+            }
+          }
+        });
+      }
+
+      const classSectionFilters = assigned.map(ac => ({ className: ac.className, sectionName: ac.sectionName }));
+      const classFilters = assigned.map(ac => ac.className);
+
+      // Assigned Students count
+      const totalStudents = await Student.countDocuments({ status: "Active", $or: classSectionFilters });
+
+      // Today's Attendance logs in teacher's classes
+      const attendanceLogs = await StudentAttendance.find({
+        date: startOfToday,
+        $or: assigned.map(ac => ({ class: ac.className, section: ac.sectionName }))
+      });
+
+      let presentStudents = 0;
+      attendanceLogs.forEach(log => {
+        if (log.status === "Present" || log.status === "Late") presentStudents++;
+        else if (log.status === "Half Day") presentStudents += 0.5;
+      });
+
+      const studentAttendanceRateToday = safePercentage(presentStudents, totalStudents);
+
+      // Upcoming Exams
+      let upcomingExams = [];
+      try {
+        upcomingExams = await Exam.find({
+          academicYear: ayObjectId,
+          status: { $in: ["Scheduled", "Active"] },
+          "applicableClasses.className": { $in: classFilters }
+        }).lean();
+      } catch (err) {
+        console.error("Error fetching teacher upcoming exams:", err);
+      }
+
+      // Pending Marks Entry
+      let activeExams = [];
+      try {
+        activeExams = await Exam.find({
+          academicYear: ayObjectId,
+          status: { $in: ["Scheduled", "Active", "Completed"] }
+        }).lean();
+      } catch (err) {
+        console.error("Error fetching active exams for teacher:", err);
+      }
+
+      const pendingMarksEntry = [];
+      for (const ex of activeExams) {
+        try {
+          if (!ex || !Array.isArray(ex.applicableClasses)) continue;
+
+          for (const ac of assigned) {
+            const isApplicable = ex.applicableClasses.some(c => {
+              if (!c) return false;
+              if (typeof c === "string") return c.toLowerCase() === ac.className.toLowerCase();
+              return c.className?.toLowerCase() === ac.className.toLowerCase();
+            });
+
+            if (isApplicable) {
+              const hasMarks = await MarksEntry.exists({
+                exam: ex._id,
+                className: ac.className,
+                section: ac.sectionName,
+                subject: ac.subjectId
+              });
+              if (!hasMarks) {
+                pendingMarksEntry.push({
+                  examId: ex._id,
+                  examName: ex.examName,
+                  className: ac.className,
+                  sectionName: ac.sectionName,
+                  subjectName: ac.subjectName,
+                  subjectId: ac.subjectId
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.error(`Skipping invalid exam record ${ex?._id}:`, err);
+        }
+      }
+
+      // Unique assigned classes & subjects count
+      const uniqueClasses = new Set(assigned.map(ac => `${ac.className}-${ac.sectionName}`)).size;
+      const uniqueSubjects = new Set(assigned.map(ac => ac.subjectId.toString())).size;
+
+      const todaysClasses = assigned.map(ac => ({
+        className: ac.className,
+        sectionName: ac.sectionName,
+        subjectName: ac.subjectName,
+        time: "09:00 AM - 10:00 AM" // Mock timing slot
+      }));
+
+      return res.status(200).json({
+        success: true,
+        role: "TEACHER",
+        data: {
+          todaysClasses,
+          assignedStudentsCount: totalStudents,
+          studentAttendanceRateToday,
+          upcomingExams,
+          pendingMarksEntry,
+          kpis: {
+            totalClasses: uniqueClasses,
+            totalSubjects: uniqueSubjects
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // PARENT DASHBOARD LOGIC
+    // ==========================================
+    if (req.user.role === "PARENT") {
+      const children = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).populate("academicYear", "name").lean();
+
+      const childrenData = [];
+      for (const child of children) {
+        // Attendance logs
+        const logs = await StudentAttendance.find({ student: child._id });
+        const totalWorking = logs.length;
+        const present = logs.filter(l => ["Present", "Late", "Half Day"].includes(l.status)).length;
+        const attendancePercent = totalWorking > 0 ? Math.round((present / totalWorking) * 100) : 100;
+
+        // Invoices / Fees
+        const invoices = await Invoice.find({ student: child._id });
+        const totalPayable = invoices.reduce((sum, inv) => sum + inv.payableAmount, 0);
+        const totalPaid = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+        const feesDue = Math.max(0, totalPayable - totalPaid);
+        let feeStatus = "Paid";
+        if (feesDue > 0) {
+          feeStatus = totalPaid > 0 ? "Partially Paid" : "Unpaid";
+        }
+
+        // Latest published result
+        const latestResult = await ExamResultSummary.findOne({ student: child._id, isPublished: true })
+          .populate("exam", "examName")
+          .sort({ createdAt: -1 })
+          .lean();
+
+        // Upcoming Exams
+        let upcoming = [];
+        try {
+          upcoming = await Exam.find({
+            academicYear: ayObjectId,
+            status: { $in: ["Scheduled", "Active"] },
+            "applicableClasses.className": child.className
+          }).select("examName startDate endDate").lean();
+        } catch (err) {
+          console.error("Error fetching child upcoming exams:", err);
+        }
+
+        childrenData.push({
+          student: {
+            id: child._id,
+            fullName: `${child.firstName} ${child.lastName}`,
+            photoUrl: child.photoUrl || "",
+            admissionNo: child.admissionNo,
+            className: child.className,
+            sectionName: child.sectionName,
+            academicYearName: child.academicYear?.name || "N/A"
+          },
+          kpis: {
+            attendancePercent,
+            feesDue,
+            feeStatus,
+            latestResult: latestResult ? {
+              examName: latestResult.exam?.examName || "Exam",
+              percentage: latestResult.percentage,
+              resultStatus: latestResult.resultStatus,
+              grade: latestResult.grade
+            } : null,
+            upcomingExamsCount: upcoming.length
+          },
+          upcomingExams: upcoming,
+          invoices,
+          latestResultDetails: latestResult
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        role: "PARENT",
+        data: {
+          children: childrenData
+        }
+      });
+    }
+
+    // ==========================================
+    // ADMIN DASHBOARD LOGIC (Original implementation)
+    // ==========================================
     const totalStudents = await Student.countDocuments({ academicYear: ayObjectId, status: "Active" });
     const newAdmissions = await Admission.countDocuments({ academicYear: ayObjectId, approvalStatus: "Approved" });
     const totalStaff = await Staff.countDocuments({ status: "Active" });
@@ -62,18 +276,15 @@ export const getDashboardSummary = async (req, res) => {
     const activeStreamsCount = await Stream.countDocuments({ status: "Active" });
     const activeSubjectsCount = await Subject.countDocuments();
 
-    // Section count across classes
     const classes = await ClassSection.find({ status: "Active" });
     const totalSectionsCount = classes.reduce((sum, c) => sum + (c.sections?.length || 0), 0);
 
-    // Exams counts
     const upcomingExams = await Exam.countDocuments({ academicYear: ayObjectId, status: { $in: ["Scheduled", "Active"] } });
     const totalExams = await Exam.countDocuments({ academicYear: ayObjectId });
     const scheduledExams = await Exam.countDocuments({ academicYear: ayObjectId, status: "Scheduled" });
     const completedExams = await Exam.countDocuments({ academicYear: ayObjectId, status: "Completed" });
     const resultsPublished = await Exam.countDocuments({ academicYear: ayObjectId, status: "Published" });
 
-    // 3. Student & Staff Attendance Today
     const studentAttendanceLogs = await StudentAttendance.find({ academicYear: ayObjectId, date: startOfToday });
     let presentStudents = 0;
     let absentStudents = 0;
@@ -105,7 +316,6 @@ export const getDashboardSummary = async (req, res) => {
 
     const staffAttendanceRateToday = safePercentage(presentStaff, totalStaff);
 
-    // 4. Finance & Fees Summaries
     const feeSummary = await StudentFeeAssignment.aggregate([
       { $match: { academicYear: ayObjectId } },
       {
@@ -124,8 +334,6 @@ export const getDashboardSummary = async (req, res) => {
     const collectionPercentage = safePercentage(collectedAmount, expectedCollection);
     const totalDiscountAmount = feeSummary[0]?.totalDiscount || 0;
 
-    // Recent 5 payments
-    // To filter by academic year, we can aggregate receipts and lookup invoices/students
     const recentCollections = await FeeReceipt.aggregate([
       {
         $lookup: {
@@ -153,7 +361,6 @@ export const getDashboardSummary = async (req, res) => {
       }
     ]);
 
-    // Monthly collection trend
     const monthlyCollections = await FeeReceipt.aggregate([
       {
         $lookup: {
@@ -192,7 +399,6 @@ export const getDashboardSummary = async (req, res) => {
       };
     });
 
-    // 5. Academic Details
     const classCounts = await Student.aggregate([
       { $match: { academicYear: ayObjectId, status: "Active" } },
       { $group: { _id: "$className", count: { $sum: 1 } } },
@@ -204,7 +410,6 @@ export const getDashboardSummary = async (req, res) => {
       count: cc.count
     }));
 
-    // 6. Admission & Enquiry Analytics
     const totalEnquiries = await Enquiry.countDocuments({ academicYear: ayObjectId });
     const pendingEnquiries = await Enquiry.countDocuments({ academicYear: ayObjectId, status: { $in: ["New", "Follow Up"] } });
     const approvedAdmissions = await Admission.countDocuments({ academicYear: ayObjectId, approvalStatus: "Approved" });
@@ -216,7 +421,6 @@ export const getDashboardSummary = async (req, res) => {
     });
     const admissionConversionRate = safePercentage(approvedAdmissions, totalEnquiries);
 
-    // 7. Student Breakdown (Gender, Category)
     const boysCount = await Student.countDocuments({ academicYear: ayObjectId, status: "Active", gender: "Male" });
     const girlsCount = await Student.countDocuments({ academicYear: ayObjectId, status: "Active", gender: "Female" });
 
@@ -225,7 +429,6 @@ export const getDashboardSummary = async (req, res) => {
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
 
-    // Ensure we represent all categories cleanly
     const categoriesList = ["General", "OBC", "SC", "ST", "EWS"];
     const categoryDistribution = categoriesList.map(cat => {
       const match = categoryCounts.find(cc => cc._id?.toLowerCase() === cat.toLowerCase());
@@ -235,7 +438,6 @@ export const getDashboardSummary = async (req, res) => {
       };
     });
 
-    // 8. Staff Overview
     const teachingStaff = await Staff.countDocuments({ status: "Active", staffType: "Teaching Staff" });
     const nonTeachingStaff = await Staff.countDocuments({ status: "Active", staffType: "Non Teaching Staff" });
 
@@ -249,7 +451,6 @@ export const getDashboardSummary = async (req, res) => {
       count: dc.count
     }));
 
-    // 9. Attendance Trends & Class Attendance
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
     const dailyAttendanceTrend = await StudentAttendance.aggregate([
@@ -291,7 +492,6 @@ export const getDashboardSummary = async (req, res) => {
       rate: safePercentage(abc.present, abc.total)
     }));
 
-    // 10. Examination Analytics
     const examResults = await ExamResultSummary.find({ academicYear: ayObjectId });
     const totalResults = examResults.length;
     const passedResults = examResults.filter(r => r.resultStatus === "PASS").length;
@@ -313,7 +513,6 @@ export const getDashboardSummary = async (req, res) => {
       rate: safePercentage(ces.passed, ces.total)
     }));
 
-    // Top & Lowest performing classes
     let topPerformingClass = "—";
     let lowestPerformingClass = "—";
     if (classWisePassRates.length > 0) {
@@ -322,7 +521,6 @@ export const getDashboardSummary = async (req, res) => {
       lowestPerformingClass = `${sortedClasses[sortedClasses.length - 1].className} (${sortedClasses[sortedClasses.length - 1].rate}%)`;
     }
 
-    // Assemble the single consolidated summary payload
     const dashboardSummary = {
       academicYear: {
         id: academicYear,
@@ -398,6 +596,7 @@ export const getDashboardSummary = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      role: "ADMIN",
       data: dashboardSummary
     });
 
@@ -431,7 +630,7 @@ export const searchDashboard = async (req, res) => {
 
     const regex = new RegExp(q.trim(), "i");
 
-    // Parallel Queries for Instant Search
+    // Parallel Queries for Instant Search (restricting student matches by role)
     const studentQuery = {
       $or: [
         { firstName: regex },
@@ -441,6 +640,31 @@ export const searchDashboard = async (req, res) => {
       ]
     };
     if (ayObjectId) studentQuery.academicYear = ayObjectId;
+
+    if (req.user.role === "PARENT") {
+      studentQuery.$and = [
+        {
+          $or: [
+            { fatherEmail: req.user.email },
+            { motherEmail: req.user.email }
+          ]
+        }
+      ];
+    } else if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length > 0) {
+        studentQuery.$and = [
+          {
+            $or: assigned.map(ac => ({ className: ac.className, sectionName: ac.sectionName }))
+          }
+        ];
+      } else {
+        return res.status(200).json({
+          success: true,
+          results: { students: [], staff: [], admissions: [], finance: [], exams: [] }
+        });
+      }
+    }
 
     const admissionQuery = {
       $or: [
@@ -465,17 +689,28 @@ export const searchDashboard = async (req, res) => {
     const examQuery = { examName: regex };
     if (ayObjectId) examQuery.academicYear = ayObjectId;
 
+    const financeQuery = {
+      $or: [
+        { invoiceNumber: regex },
+        { feeStructureName: regex }
+      ]
+    };
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).distinct("_id");
+      financeQuery.student = { $in: parentStudents };
+    }
+
     const [students, admissions, staff, exams, invoiceMatches] = await Promise.all([
       Student.find(studentQuery).limit(5).select("firstName lastName studentId admissionNo className sectionName"),
-      Admission.find(admissionQuery).limit(5).select("firstName lastName studentId admissionNo classApplied approvalStatus"),
-      Staff.find(staffQuery).limit(5).select("firstName lastName employeeId staffType"),
+      req.user.role === "ADMIN" ? Admission.find(admissionQuery).limit(5).select("firstName lastName studentId admissionNo classApplied approvalStatus") : Promise.resolve([]),
+      req.user.role === "ADMIN" ? Staff.find(staffQuery).limit(5).select("firstName lastName employeeId staffType") : Promise.resolve([]),
       Exam.find(examQuery).limit(5).select("examName startDate endDate status"),
-      Invoice.find({
-        $or: [
-          { invoiceNumber: regex },
-          { feeStructureName: regex }
-        ]
-      }).limit(5).populate("student", "firstName lastName").select("invoiceNumber payableAmount paidAmount status student")
+      req.user.role !== "TEACHER" ? Invoice.find(financeQuery).limit(5).populate("student", "firstName lastName").select("invoiceNumber payableAmount paidAmount status student") : Promise.resolve([])
     ]);
 
     const results = {

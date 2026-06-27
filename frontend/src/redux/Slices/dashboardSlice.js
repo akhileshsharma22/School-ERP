@@ -6,7 +6,7 @@ export const fetchDashboardSummary = createAsyncThunk(
   async (academicYearId, { rejectWithValue }) => {
     try {
       const data = await dashboardService.getDashboardSummary(academicYearId);
-      return data.data;
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

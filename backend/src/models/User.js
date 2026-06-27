@@ -33,15 +33,21 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: [
-        "SUPER_ADMIN",
         "ADMIN",
-        "STAFF",
-        "ACCOUNTANT",
+        "TEACHER",
         "PARENT",
-        "STUDENT",
       ],
       required: true,
     },
+
+    assignedClasses: [
+      {
+        className: { type: String, required: true },
+        sectionName: { type: String, required: true },
+        subjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
+        subjectName: { type: String, required: true }
+      }
+    ],
 
     isActive: {
       type: Boolean,
@@ -49,6 +55,11 @@ const userSchema = new mongoose.Schema(
     },
 
     refreshToken: String,
+
+    photoUrl: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -11,8 +11,12 @@ import {
   ArrowLeft,
   Camera,
   Check,
+  Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import api from "../../services/api";
+import { updateUser } from "../../redux/slices/authSlice";
 
 /* ─── Section Wrapper ─────────────────────────────── */
 const Section = ({ title, description, children }) => (
@@ -50,13 +54,14 @@ const ReadField = ({ value, icon: Icon }) => (
 /* ─── Profile Settings Page ───────────────────────── */
 const ProfileSettingsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  const displayName = user?.name || user?.fullName || "User";
+  const displayName = user?.fullName || "User";
   const displayRole = user?.role
     ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
     : "Admin";
-  const email = user?.email || "Not available";
+  const emailVal = user?.email || "";
 
   const initials = displayName
     .split(" ")
@@ -64,6 +69,79 @@ const ProfileSettingsPage = () => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  /* Profile Details Edit state */
+  const [profileData, setProfileData] = useState({
+    fullName: displayName,
+    email: emailVal
+  });
+  const [detailsSaving, setDetailsSaving] = useState(false);
+
+  useEffect(() => {
+    setProfileData({
+      fullName: displayName,
+      email: emailVal
+    });
+  }, [user]);
+
+  const handleDetailsSave = async (e) => {
+    e.preventDefault();
+    if (!profileData.fullName.trim()) {
+      toast.error("Full Name cannot be empty.");
+      return;
+    }
+    setDetailsSaving(true);
+    try {
+      const res = await api.put("/auth/profile", {
+        fullName: profileData.fullName,
+        email: profileData.email
+      });
+      if (res.data?.success) {
+        dispatch(updateUser({
+          fullName: res.data.user.fullName,
+          email: res.data.user.email
+        }));
+        toast.success("Account details updated successfully!");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update details.");
+    } finally {
+      setDetailsSaving(false);
+    }
+  };
+
+  /* Avatar upload state */
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowed = ["image/png", "image/jpg", "image/jpeg"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Format error. Image must be PNG, JPG, or JPEG.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Size error. Maximum image size is 5 MB.");
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append("photo", file);
+
+    const uploadToastId = toast.loading("Uploading new avatar...");
+    try {
+      const res = await api.put("/auth/profile", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.data?.success) {
+        dispatch(updateUser({ photoUrl: res.data.user.photoUrl }));
+        toast.success("Profile avatar updated successfully!", { id: uploadToastId });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload avatar.", { id: uploadToastId });
+    }
+  };
 
   /* Password change state */
   const [pwData, setPwData] = useState({
@@ -76,11 +154,12 @@ const ProfileSettingsPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
 
   const handlePwChange = (e) =>
     setPwData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handlePasswordSave = (e) => {
+  const handlePasswordSave = async (e) => {
     e.preventDefault();
     setPwError("");
     if (!pwData.current) {
@@ -95,17 +174,31 @@ const ProfileSettingsPage = () => {
       setPwError("New passwords do not match.");
       return;
     }
-    // TODO: wire to API
-    setPwSaved(true);
-    setPwData({ current: "", newPw: "", confirm: "" });
-    setTimeout(() => setPwSaved(false), 3000);
+
+    setPwSaving(true);
+    try {
+      const res = await api.post("/auth/change-password", {
+        currentPassword: pwData.current,
+        newPassword: pwData.newPw
+      });
+      if (res.data?.success) {
+        setPwSaved(true);
+        setPwData({ current: "", newPw: "", confirm: "" });
+        toast.success("Password updated successfully.");
+        setTimeout(() => setPwSaved(false), 3000);
+      }
+    } catch (err) {
+      setPwError(err.response?.data?.message || "Incorrect current password.");
+    } finally {
+      setPwSaving(false);
+    }
   };
 
   /* Gradient based on role */
   const roleGradient =
-    displayRole.toLowerCase() === "admin"
+    user?.role === "ADMIN"
       ? "from-blue-600 to-indigo-600"
-      : displayRole.toLowerCase() === "staff"
+      : user?.role === "TEACHER"
       ? "from-emerald-500 to-teal-600"
       : "from-violet-500 to-purple-600";
 
@@ -138,17 +231,25 @@ const ProfileSettingsPage = () => {
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div
-                className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${roleGradient} text-xl font-extrabold text-white shadow-lg`}
-              >
-                {initials}
+              <div className="h-16 w-16 rounded-2xl bg-slate-50 border overflow-hidden flex items-center justify-center shadow-md relative group">
+                {user?.photoUrl ? (
+                  <img
+                    src={`http://localhost:5000${user.photoUrl}`}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${roleGradient} text-xl font-extrabold text-white`}
+                  >
+                    {initials}
+                  </div>
+                )}
+                <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center cursor-pointer">
+                  <Camera size={14} className="text-white" />
+                  <input type="file" onChange={handlePhotoUpload} className="hidden" />
+                </label>
               </div>
-              <button
-                title="Change photo (coming soon)"
-                className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-slate-700 text-white hover:bg-slate-900 transition cursor-pointer shadow-md"
-              >
-                <Camera size={11} />
-              </button>
             </div>
 
             <div>
@@ -165,23 +266,40 @@ const ProfileSettingsPage = () => {
         {/* ── Account Info Section ── */}
         <Section
           title="Account Information"
-          description="Your identity as stored in the system"
+          description="Update your personal details here"
         >
-          <div className="space-y-4">
+          <form onSubmit={handleDetailsSave} className="space-y-4">
             <FieldRow label="Full Name">
-              <ReadField value={displayName} icon={User} />
+              <input
+                type="text"
+                value={profileData.fullName}
+                onChange={(e) => setProfileData(p => ({ ...p, fullName: e.target.value }))}
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
             </FieldRow>
             <FieldRow label="Email">
-              <ReadField value={email} icon={Mail} />
+              <input
+                type="email"
+                value={profileData.email}
+                onChange={(e) => setProfileData(p => ({ ...p, email: e.target.value }))}
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
             </FieldRow>
             <FieldRow label="Role">
               <ReadField value={displayRole} icon={ShieldCheck} />
             </FieldRow>
-          </div>
 
-          <p className="mt-4 text-[11px] text-slate-400">
-            To update your name or email, contact your system administrator.
-          </p>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={detailsSaving}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-650 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {detailsSaving && <Loader2 size={12} className="animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </form>
         </Section>
 
         {/* ── Change Password Section ── */}
@@ -290,8 +408,10 @@ const ProfileSettingsPage = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                disabled={pwSaving}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-650 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
+                {pwSaving && <Loader2 size={12} className="animate-spin" />}
                 Update Password
               </button>
             </div>

@@ -6,13 +6,17 @@ import {
   convertEnquiry,
 } from "../controllers/enquiryController.js";
 import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
+router.use(protect);
+router.use(authorize("ADMIN"));
+
 // Enquiries routes
-router.get("/", protect, getEnquiries);
-router.post("/", protect, createEnquiry);
-router.put("/:id", protect, updateEnquiry);
-router.post("/:id/convert", protect, convertEnquiry);
+router.get("/", getEnquiries);
+router.post("/", createEnquiry);
+router.put("/:id", updateEnquiry);
+router.post("/:id/convert", convertEnquiry);
 
 export default router;

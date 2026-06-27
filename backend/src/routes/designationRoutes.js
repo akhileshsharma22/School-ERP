@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
+import { authorize } from "../middlewares/roleMiddleware.js";
 
 import {
   createDesignation,
@@ -8,6 +10,9 @@ import {
 } from "../controllers/designationController.js";
 
 const router = express.Router();
+
+router.use(protect);
+router.use(authorize("ADMIN"));
 
 router.get("/", getDesignations);
 

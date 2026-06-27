@@ -185,6 +185,16 @@ export const createExam = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please fill all required fields" });
     }
 
+    // Validate applicableClasses structure
+    if (!Array.isArray(applicableClasses)) {
+      return res.status(400).json({ success: false, message: "applicableClasses must be an array of class assignments" });
+    }
+    for (const ac of applicableClasses) {
+      if (!ac || typeof ac !== "object" || !ac.classId || !mongoose.Types.ObjectId.isValid(ac.classId) || !ac.className?.trim()) {
+        return res.status(400).json({ success: false, message: "Valid classId and className are required for each class assignment" });
+      }
+    }
+
     // Passing percentage range validation
     const pct = Number(passingPercentage);
     if (isNaN(pct) || pct < 1 || pct > 100) {
@@ -276,6 +286,16 @@ export const updateExam = async (req, res) => {
       newApplicableClasses.length === 0
     ) {
       return res.status(400).json({ success: false, message: "Please fill all required fields" });
+    }
+
+    // Validate newApplicableClasses structure
+    if (!Array.isArray(newApplicableClasses)) {
+      return res.status(400).json({ success: false, message: "applicableClasses must be an array of class assignments" });
+    }
+    for (const ac of newApplicableClasses) {
+      if (!ac || typeof ac !== "object" || !ac.classId || !mongoose.Types.ObjectId.isValid(ac.classId) || !ac.className?.trim()) {
+        return res.status(400).json({ success: false, message: "Valid classId and className are required for each class assignment" });
+      }
     }
 
     // Passing percentage range validation
@@ -441,6 +461,28 @@ export const getSchedule = async (req, res) => {
     if (classId && mongoose.Types.ObjectId.isValid(classId)) filter.classId = classId;
     if (section) filter.section = section;
 
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).select("className sectionName");
+      
+      if (parentStudents.length > 0) {
+        filter.$or = parentStudents.map(s => ({ className: s.className, section: s.sectionName }));
+      } else {
+        return res.json({ success: true, schedules: [] });
+      }
+    } else if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length > 0) {
+        filter.$or = assigned.map(ac => ({ className: ac.className, section: ac.sectionName }));
+      } else {
+        return res.json({ success: true, schedules: [] });
+      }
+    }
+
     const schedules = await ExamSchedule.find(filter)
       .populate("subject", "subjectName subjectCode subjectType")
       .sort({ examDate: 1, startTime: 1 })
@@ -596,6 +638,15 @@ export const getStudentsForMarks = async (req, res) => {
     const { className, section, academicYear } = req.query;
     if (!className) return res.status(400).json({ success: false, message: "Class is required" });
 
+    if (req.user.role === "TEACHER") {
+      const isAssigned = req.user.assignedClasses?.some(
+        (ac) => ac.className === className && ac.sectionName === section
+      );
+      if (!isAssigned) {
+        return res.status(403).json({ success: false, message: "You are not assigned to this class and section." });
+      }
+    }
+
     const filter = { className, status: "Active" };
     if (section) filter.sectionName = section;
     if (academicYear && mongoose.Types.ObjectId.isValid(academicYear))
@@ -621,6 +672,23 @@ export const getMarks = async (req, res) => {
     if (section) filter.section = section;
     if (subject && mongoose.Types.ObjectId.isValid(subject)) filter.subject = subject;
 
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).distinct("_id");
+      filter.student = { $in: parentStudents };
+    } else if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length > 0) {
+        filter.$or = assigned.map(ac => ({ className: ac.className, section: ac.sectionName, subject: ac.subjectId }));
+      } else {
+        return res.json({ success: true, marks: [] });
+      }
+    }
+
     const marks = await MarksEntry.find(filter)
       .populate("student", "studentId admissionNo firstName middleName lastName photoUrl")
       .populate("subject", "subjectName subjectCode")
@@ -639,6 +707,15 @@ export const saveBulkMarks = async (req, res) => {
 
     if (!exam || !subject || !academicYear || !className || !section)
       return res.status(400).json({ success: false, message: "Exam, subject, academic year, class and section are required" });
+
+    if (req.user.role === "TEACHER") {
+      const isAssigned = req.user.assignedClasses?.some(
+        (ac) => ac.className === className && ac.sectionName === section && ac.subjectId.toString() === subject.toString()
+      );
+      if (!isAssigned) {
+        return res.status(403).json({ success: false, message: "You are not authorized to save marks for this class, section, and subject." });
+      }
+    }
 
     if (!Array.isArray(marksData) || !marksData.length)
       return res.status(400).json({ success: false, message: "Marks data is required" });
@@ -770,6 +847,24 @@ export const getResults = async (req, res) => {
     if (section) filter.section = section;
     if (academicYear && mongoose.Types.ObjectId.isValid(academicYear)) filter.academicYear = academicYear;
     if (isPublished !== undefined) filter.isPublished = isPublished === "true";
+
+    if (req.user.role === "PARENT") {
+      const parentStudents = await Student.find({
+        $or: [
+          { fatherEmail: req.user.email },
+          { motherEmail: req.user.email }
+        ]
+      }).distinct("_id");
+      filter.student = { $in: parentStudents };
+      filter.isPublished = true;
+    } else if (req.user.role === "TEACHER") {
+      const assigned = req.user.assignedClasses || [];
+      if (assigned.length > 0) {
+        filter.$or = assigned.map(ac => ({ className: ac.className, section: ac.sectionName }));
+      } else {
+        return res.json({ success: true, results: [], total: 0 });
+      }
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     let query = ExamResultSummary.find(filter)
